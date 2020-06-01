@@ -16,15 +16,16 @@
     {
         private readonly string[] _unsupportedHeaders = { "host" };
 
-        public async Task<Response<HttpRequestMessage>> Map(HttpRequest request, DownstreamReRoute downstreamReRoute)
+        public async Task<Response<HttpRequestMessage>> Map(HttpRequest request, DownstreamRoute downstreamRoute)
         {
             try
             {
                 var requestMessage = new HttpRequestMessage()
                 {
                     Content = await MapContent(request),
-                    Method = MapMethod(request, downstreamReRoute),
-                    RequestUri = MapUri(request)
+                    Method = MapMethod(request, downstreamRoute),
+                    RequestUri = MapUri(request),
+                    Version = downstreamRoute.DownstreamHttpVersion,
                 };
 
                 MapHeaders(request, requestMessage);
@@ -72,11 +73,11 @@
             }
         }
 
-        private HttpMethod MapMethod(HttpRequest request, DownstreamReRoute downstreamReRoute)
+        private HttpMethod MapMethod(HttpRequest request, DownstreamRoute downstreamRoute)
         {
-            if (!string.IsNullOrEmpty(downstreamReRoute?.DownstreamHttpMethod))
+            if (!string.IsNullOrEmpty(downstreamRoute?.DownstreamHttpMethod))
             {
-                return new HttpMethod(downstreamReRoute.DownstreamHttpMethod);
+                return new HttpMethod(downstreamRoute.DownstreamHttpMethod);
             }
 
             return new HttpMethod(request.Method);

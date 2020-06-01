@@ -20,7 +20,7 @@ namespace Ocelot.AcceptanceTests
     {
         private readonly Steps _steps;
         private IWebHost _identityServerBuilder;
-        private string _identityServerRootUrl = "http://localhost:51888";
+        private string _identityServerRootUrl;
         private string _downstreamServicePath = "/";
         private string _downstreamServiceHost = "localhost";
         private string _downstreamServiceScheme = "http";
@@ -32,6 +32,8 @@ namespace Ocelot.AcceptanceTests
         {
             _serviceHandler = new ServiceHandler();
             _steps = new Steps();
+            var identityServerPort = RandomPortFinder.GetRandomPort();
+            _identityServerRootUrl = $"http://localhost:{identityServerPort}";
             _options = o =>
             {
                 o.Authority = _identityServerRootUrl;
@@ -45,13 +47,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_401_using_identity_server_access_token()
         {
-            int port = 54329;
+            int port = RandomPortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                    {
-                       new FileReRoute
+                       new FileRoute
                        {
                            DownstreamPathTemplate = _downstreamServicePath,
                            DownstreamHostAndPorts = new List<FileHostAndPort>
@@ -86,13 +88,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_response_200_using_identity_server()
         {
-            int port = 54099;
+            int port = RandomPortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                    {
-                       new FileReRoute
+                       new FileRoute
                        {
                            DownstreamPathTemplate = _downstreamServicePath,
                            DownstreamHostAndPorts = new List<FileHostAndPort>
@@ -129,13 +131,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_response_401_using_identity_server_with_token_requested_for_other_api()
         {
-            int port = 54196;
+            int port = RandomPortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                    {
-                       new FileReRoute
+                       new FileRoute
                        {
                            DownstreamPathTemplate = _downstreamServicePath,
                            DownstreamHostAndPorts = new List<FileHostAndPort>
@@ -171,13 +173,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_201_using_identity_server_access_token()
         {
-            int port = 52226;
+            int port = RandomPortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                    {
-                       new FileReRoute
+                       new FileRoute
                        {
                            DownstreamPathTemplate = _downstreamServicePath,
                            DownstreamHostAndPorts = new List<FileHostAndPort>
@@ -214,13 +216,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_201_using_identity_server_reference_token()
         {
-            int port = 52222;
+            int port = RandomPortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                    {
-                       new FileReRoute
+                       new FileRoute
                        {
                            DownstreamPathTemplate = _downstreamServicePath,
                            DownstreamHostAndPorts = new List<FileHostAndPort>

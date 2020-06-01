@@ -29,14 +29,14 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_proxy_websocket_input_to_downstream_service()
         {
-            var downstreamPort = 5001;
+            var downstreamPort = RandomPortFinder.GetRandomPort();
             var downstreamHost = "localhost";
 
             var config = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                 {
-                    new FileReRoute
+                    new FileRoute
                     {
                         UpstreamPathTemplate = "/",
                         DownstreamPathTemplate = "/ws",
@@ -64,16 +64,16 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_proxy_websocket_input_to_downstream_service_and_use_load_balancer()
         {
-            var downstreamPort = 5005;
+            var downstreamPort = RandomPortFinder.GetRandomPort();
             var downstreamHost = "localhost";
-            var secondDownstreamPort = 5006;
+            var secondDownstreamPort = RandomPortFinder.GetRandomPort();
             var secondDownstreamHost = "localhost";
 
             var config = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                 {
-                    new FileReRoute
+                    new FileRoute
                     {
                         UpstreamPathTemplate = "/",
                         DownstreamPathTemplate = "/ws",

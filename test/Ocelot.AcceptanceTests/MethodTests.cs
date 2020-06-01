@@ -24,11 +24,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_response_200_when_get_converted_to_post()
         {
+            var port = RandomPortFinder.GetRandomPort();
+
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                     {
-                        new FileReRoute
+                        new FileRoute
                         {
                             DownstreamPathTemplate = "/{url}",
                             DownstreamScheme = "http",
@@ -39,7 +41,7 @@ namespace Ocelot.AcceptanceTests
                                 new FileHostAndPort
                                 {
                                     Host = "localhost",
-                                    Port = 53171,
+                                    Port = port,
                                 },
                             },
                             DownstreamHttpMethod = "POST",
@@ -47,7 +49,7 @@ namespace Ocelot.AcceptanceTests
                     },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn("http://localhost:53171/", "/", "POST"))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}/", "/", "POST"))
                 .And(x => _steps.GivenThereIsAConfiguration(configuration))
                 .And(x => _steps.GivenOcelotIsRunning())
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
@@ -58,11 +60,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_response_200_when_get_converted_to_post_with_content()
         {
+            var port = RandomPortFinder.GetRandomPort();
+
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                 {
-                    new FileReRoute
+                    new FileRoute
                     {
                         DownstreamPathTemplate = "/{url}",
                         DownstreamScheme = "http",
@@ -73,7 +77,7 @@ namespace Ocelot.AcceptanceTests
                             new FileHostAndPort
                             {
                                 Host = "localhost",
-                                Port = 53271,
+                                Port = port,
                             },
                         },
                         DownstreamHttpMethod = "POST",
@@ -84,7 +88,7 @@ namespace Ocelot.AcceptanceTests
             const string expected = "here is some content";
             var httpContent = new StringContent(expected);
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn("http://localhost:53271/", "/", "POST"))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}/", "/", "POST"))
                 .And(x => _steps.GivenThereIsAConfiguration(configuration))
                 .And(x => _steps.GivenOcelotIsRunning())
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/", httpContent))
@@ -96,11 +100,13 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_return_response_200_when_get_converted_to_get_with_content()
         {
+            var port = RandomPortFinder.GetRandomPort();
+
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                 {
-                    new FileReRoute
+                    new FileRoute
                     {
                         DownstreamPathTemplate = "/{url}",
                         DownstreamScheme = "http",
@@ -111,7 +117,7 @@ namespace Ocelot.AcceptanceTests
                             new FileHostAndPort
                             {
                                 Host = "localhost",
-                                Port = 53272,
+                                Port = port,
                             },
                         },
                         DownstreamHttpMethod = "GET",
@@ -122,7 +128,7 @@ namespace Ocelot.AcceptanceTests
             const string expected = "here is some content";
             var httpContent = new StringContent(expected);
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn("http://localhost:53272/", "/", "GET"))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}/", "/", "GET"))
                 .And(x => _steps.GivenThereIsAConfiguration(configuration))
                 .And(x => _steps.GivenOcelotIsRunning())
                 .When(x => _steps.WhenIPostUrlOnTheApiGateway("/", httpContent))

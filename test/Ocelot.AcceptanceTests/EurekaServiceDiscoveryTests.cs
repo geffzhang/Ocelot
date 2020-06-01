@@ -28,7 +28,7 @@
         {
             var eurekaPort = 8761;
             var serviceName = "product";
-            var downstreamServicePort = 50371;
+            var downstreamServicePort = RandomPortFinder.GetRandomPort();           
             var downstreamServiceOneUrl = $"http://localhost:{downstreamServicePort}";
             var fakeEurekaServiceDiscoveryUrl = $"http://localhost:{eurekaPort}";
 
@@ -37,9 +37,9 @@
 
             var configuration = new FileConfiguration
             {
-                ReRoutes = new List<FileReRoute>
+                Routes = new List<FileRoute>
                     {
-                        new FileReRoute
+                        new FileRoute
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamScheme = "http",
