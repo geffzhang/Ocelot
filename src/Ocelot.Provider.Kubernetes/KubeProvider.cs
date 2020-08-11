@@ -10,16 +10,16 @@ using Ocelot.Provider.Kubernetes.KubeApiClientExtensions;
 
 namespace Ocelot.Provider.Kubernetes
 {
-    public class KubernetesServiceDiscoveryProvider : IServiceDiscoveryProvider
+    public class Kube : IServiceDiscoveryProvider
     {
         private readonly KubeRegistryConfiguration _kubeRegistryConfiguration;
         private readonly IOcelotLogger _logger;
         private readonly IKubeApiClient _kubeApi;
 
-        public KubernetesServiceDiscoveryProvider(KubeRegistryConfiguration kubeRegistryConfiguration, IOcelotLoggerFactory factory, IKubeApiClient kubeApi)
+        public Kube(KubeRegistryConfiguration kubeRegistryConfiguration, IOcelotLoggerFactory factory, IKubeApiClient kubeApi)
         {
             _kubeRegistryConfiguration = kubeRegistryConfiguration;
-            _logger = factory.CreateLogger<KubernetesServiceDiscoveryProvider>();
+            _logger = factory.CreateLogger<Kube>();
             _kubeApi = kubeApi;
         }
 
