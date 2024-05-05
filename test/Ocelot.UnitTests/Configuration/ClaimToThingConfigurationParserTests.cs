@@ -2,15 +2,10 @@
 using Ocelot.Configuration.Parser;
 using Ocelot.Errors;
 using Ocelot.Responses;
-using Shouldly;
-using System.Collections.Generic;
-using System.Linq;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration
 {
-    public class ClaimToThingConfigurationParserTests
+    public class ClaimToThingConfigurationParserTests : UnitTest
     {
         private Dictionary<string, string> _dictionary;
         private readonly IClaimToThingConfigurationParser _claimToThingConfigurationParser;
@@ -24,9 +19,9 @@ namespace Ocelot.UnitTests.Configuration
         [Fact]
         public void returns_no_instructions_error()
         {
-            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>()
+            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>
             {
-                {"CustomerId", ""},
+                {"CustomerId", string.Empty},
             }))
                 .When(x => x.WhenICallTheExtractor())
                 .Then(
@@ -34,7 +29,7 @@ namespace Ocelot.UnitTests.Configuration
                         x.ThenAnErrorIsReturned(new ErrorResponse<ClaimToThing>(
                             new List<Error>
                             {
-                                new NoInstructionsError(">")
+                                new NoInstructionsError(">"),
                             })))
                 .BDDfy();
         }
@@ -42,7 +37,7 @@ namespace Ocelot.UnitTests.Configuration
         [Fact]
         public void returns_no_instructions_not_for_claims_error()
         {
-            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>()
+            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>
             {
                 {"CustomerId", "Cheese[CustomerId] > value"},
             }))
@@ -52,7 +47,7 @@ namespace Ocelot.UnitTests.Configuration
                         x.ThenAnErrorIsReturned(new ErrorResponse<ClaimToThing>(
                             new List<Error>
                             {
-                                new InstructionNotForClaimsError()
+                                new InstructionNotForClaimsError(),
                             })))
                 .BDDfy();
         }
@@ -60,7 +55,7 @@ namespace Ocelot.UnitTests.Configuration
         [Fact]
         public void can_parse_entry_to_work_out_properties_with_key()
         {
-            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>()
+            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>
             {
                 {"CustomerId", "Claims[CustomerId] > value"},
             }))
@@ -69,14 +64,14 @@ namespace Ocelot.UnitTests.Configuration
                     x =>
                         x.ThenTheClaimParserPropertiesAreReturned(
                             new OkResponse<ClaimToThing>(
-                                new ClaimToThing("CustomerId", "CustomerId", "", 0))))
+                                new ClaimToThing("CustomerId", "CustomerId", string.Empty, 0))))
                 .BDDfy();
         }
 
         [Fact]
         public void can_parse_entry_to_work_out_properties_with_key_delimiter_and_index()
         {
-            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>()
+            this.Given(x => x.GivenTheDictionaryIs(new Dictionary<string, string>
             {
                 {"UserId", "Claims[Subject] > value[0] > |"},
             }))

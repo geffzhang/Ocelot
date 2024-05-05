@@ -1,17 +1,13 @@
-﻿namespace Ocelot.AcceptanceTests
-{
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Logging;
-    using System;
-    using System.ComponentModel;
-    using System.IO;
-    using System.Net;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Server.Kestrel.Core;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
+namespace Ocelot.AcceptanceTests
+{
     public class ServiceHandler : IDisposable
     {
         private IWebHost _builder;
@@ -49,19 +45,12 @@
             _builder.Start();
         }
 
-        public void GivenThereIsAServiceRunningOn(string baseUrl, string basePath, RequestDelegate del, int port, HttpProtocols protocols)
+        public void GivenThereIsAServiceRunningOnWithKestrelOptions(string baseUrl, string basePath, Action<KestrelServerOptions> options, RequestDelegate del)
         {
             _builder = new WebHostBuilder()
                 .UseUrls(baseUrl)
                 .UseKestrel()
-                .ConfigureKestrel(serverOptions =>
-                {
-                    serverOptions.Listen(IPAddress.Loopback, port, listenOptions =>
-                        {
-                            listenOptions.UseHttps("idsrv3test.pfx", "idsrv3test");
-                            listenOptions.Protocols = protocols;
-                        });
-                })
+                .ConfigureKestrel(options ?? WithDefaultKestrelServerOptions) // !
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .Configure(app =>
@@ -72,6 +61,10 @@
                 .Build();
 
             _builder.Start();
+        }
+
+        internal void WithDefaultKestrelServerOptions(KestrelServerOptions options)
+        {
         }
 
         public void GivenThereIsAServiceRunningOn(string baseUrl, string basePath, string fileName, string password, int port, RequestDelegate del)
@@ -96,7 +89,7 @@
             _builder.Start();
         }
 
-        public async Task StartFakeDownstreamService(string url, string path, Func<HttpContext, Func<Task>, Task> middleware)
+        public async Task StartFakeDownstreamService(string url, Func<HttpContext, Func<Task>, Task> middleware)
         {
             _builder = new WebHostBuilder()
                 .ConfigureServices(s => { }).UseKestrel()
@@ -129,6 +122,7 @@
         public void Dispose()
         {
             _builder?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

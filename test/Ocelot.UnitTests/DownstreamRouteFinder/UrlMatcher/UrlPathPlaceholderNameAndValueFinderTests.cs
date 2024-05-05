@@ -1,14 +1,9 @@
 using Ocelot.DownstreamRouteFinder.UrlMatcher;
 using Ocelot.Responses;
-using Shouldly;
-using System.Collections.Generic;
-using System.Linq;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
 {
-    public class UrlPathPlaceholderNameAndValueFinderTests
+    public class UrlPathPlaceholderNameAndValueFinderTests : UnitTest
     {
         private readonly IPlaceholderNameAndValueFinder _finder;
         private string _downstreamUrlPath;
@@ -24,8 +19,8 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         [Fact]
         public void can_match_down_stream_url()
         {
-            this.Given(x => x.GivenIHaveAUpstreamPath(""))
-                .And(x => x.GivenIHaveAnUpstreamUrlTemplate(""))
+            this.Given(x => x.GivenIHaveAUpstreamPath(string.Empty))
+                .And(x => x.GivenIHaveAnUpstreamUrlTemplate(string.Empty))
                 .When(x => x.WhenIFindTheUrlVariableNamesAndValues())
                 .And(x => x.ThenTheTemplatesVariablesAre(new List<PlaceholderNameAndValue>()))
                 .BDDfy();
@@ -36,10 +31,10 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{url}", "")
+                new("{url}", string.Empty),
             };
 
-            this.Given(x => x.GivenIHaveAUpstreamPath(""))
+            this.Given(x => x.GivenIHaveAUpstreamPath(string.Empty))
                 .And(x => x.GivenIHaveAnUpstreamUrlTemplate("/{url}"))
                 .When(x => x.WhenIFindTheUrlVariableNamesAndValues())
                 .And(x => x.ThenTheTemplatesVariablesAre(expectedTemplates))
@@ -51,7 +46,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{url}", "test")
+                new("{url}", "test"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/test"))
@@ -66,7 +61,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{everything}", "test/toot")
+                new("{everything}", "test/toot"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/test/toot"))
@@ -82,7 +77,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{everything}", "test/toot")
+                new("{everything}", "test/toot"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/test/toot"))
@@ -97,7 +92,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{url}", "")
+                new("{url}", string.Empty),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/"))
@@ -110,9 +105,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         [Fact]
         public void can_match_down_stream_url_with_forward_slash()
         {
-            var expectedTemplates = new List<PlaceholderNameAndValue>
-            {
-            };
+            var expectedTemplates = new List<PlaceholderNameAndValue>();
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/"))
                 .And(x => x.GivenIHaveAnUpstreamUrlTemplate("/"))
@@ -126,7 +119,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{url}", "1")
+                new("{url}", "1"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/1/products"))
@@ -151,7 +144,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1")
+                new("{productId}", "1"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/products"))
@@ -167,7 +160,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1")
+                new("{productId}", "1"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/products"))
@@ -183,8 +176,8 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/products"))
@@ -200,9 +193,9 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2"),
-                new PlaceholderNameAndValue("{account}", "3")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
+                new("{account}", "3"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/products/3"))
@@ -218,9 +211,9 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2"),
-                new PlaceholderNameAndValue("{account}", "3")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
+                new("{account}", "3"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("/products/3/"))
@@ -266,7 +259,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1")
+                new("{productId}", "1"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("api/product/products/1"))
@@ -281,8 +274,8 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("api/product/products/1/2"))
@@ -297,8 +290,8 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("api/product/products/1/categories/2"))
@@ -313,9 +306,9 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2"),
-                new PlaceholderNameAndValue("{variantId}", "123")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
+                new("{variantId}", "123"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("api/product/products/1/categories/2/variant/123"))
@@ -330,8 +323,8 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{productId}", "1"),
-                new PlaceholderNameAndValue("{categoryId}", "2")
+                new("{productId}", "1"),
+                new("{categoryId}", "2"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("api/product/products/1/categories/2/variant/"))
@@ -346,7 +339,7 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
         {
             var expectedTemplates = new List<PlaceholderNameAndValue>
             {
-                new PlaceholderNameAndValue("{finalUrlPath}", "product/products/categories/"),
+                new("{finalUrlPath}", "product/products/categories/"),
             };
 
             this.Given(x => x.GivenIHaveAUpstreamPath("api/product/products/categories/"))
@@ -354,6 +347,60 @@ namespace Ocelot.UnitTests.DownstreamRouteFinder.UrlMatcher
                  .When(x => x.WhenIFindTheUrlVariableNamesAndValues())
                  .And(x => x.ThenTheTemplatesVariablesAre(expectedTemplates))
                  .BDDfy();
+        }
+
+        [Fact]
+        [Trait("Bug", "748")]
+        public void check_for_placeholder_at_end_of_template() 
+        {
+            var expectedTemplates = new List<PlaceholderNameAndValue>
+            {
+                new("{testId}", string.Empty),
+            };
+            this.Given(x => x.GivenIHaveAUpstreamPath("/upstream/test/"))
+                .And(x => x.GivenIHaveAnUpstreamUrlTemplate("/upstream/test/{testId}"))
+                .When(x => x.WhenIFindTheUrlVariableNamesAndValues())
+                .And(x => x.ThenTheTemplatesVariablesAre(expectedTemplates))
+                .BDDfy();
+        }
+
+        [Theory]
+        [Trait("Bug", "748")]
+        [InlineData("/api/invoices/{url}", "/api/invoices/123", "{url}", "123")]
+        [InlineData("/api/invoices/{url}", "/api/invoices/", "{url}", "")]
+        [InlineData("/api/invoices/{url}", "/api/invoices", "{url}", "")]
+        [InlineData("/api/{version}/invoices/", "/api/v1/invoices/", "{version}", "v1")]
+        public void should_fix_issue_748(string upstreamTemplate, string requestURL, string placeholderName, string placeholderValue)
+        {
+            var expectedTemplates = new List<PlaceholderNameAndValue>
+            {
+                new(placeholderName, placeholderValue),
+            };
+            this.Given(x => x.GivenIHaveAUpstreamPath(requestURL))
+                .And(x => x.GivenIHaveAnUpstreamUrlTemplate(upstreamTemplate))
+                .When(x => x.WhenIFindTheUrlVariableNamesAndValues())
+                .And(x => x.ThenTheTemplatesVariablesAre(expectedTemplates))
+                .BDDfy();
+        }
+
+        [Theory]
+        [Trait("Bug", "748")]
+        [InlineData("/api/{version}/invoices/{url}", "/api/v1/invoices/123", "{version}", "v1", "{url}", "123")]
+        [InlineData("/api/{version}/invoices/{url}", "/api/v1/invoices/", "{version}", "v1", "{url}", "")]
+        [InlineData("/api/invoices/{url}?{query}", "/api/invoices/test?query=1", "{url}", "test", "{query}", "query=1")]
+        [InlineData("/api/invoices/{url}?{query}", "/api/invoices/?query=1", "{url}", "", "{query}", "query=1")]
+        public void should_resolve_catchall_at_end_with_middle_placeholder(string upstreamTemplate, string requestURL, string placeholderName, string placeholderValue, string catchallName, string catchallValue)
+        {
+            var expectedTemplates = new List<PlaceholderNameAndValue>
+            {
+                new(placeholderName, placeholderValue),
+                new(catchallName, catchallValue),
+            };
+            this.Given(x => x.GivenIHaveAUpstreamPath(requestURL))
+                .And(x => x.GivenIHaveAnUpstreamUrlTemplate(upstreamTemplate))
+                .When(x => x.WhenIFindTheUrlVariableNamesAndValues())
+                .And(x => x.ThenTheTemplatesVariablesAre(expectedTemplates))
+                .BDDfy();
         }
 
         private void ThenTheTemplatesVariablesAre(List<PlaceholderNameAndValue> expectedResults)

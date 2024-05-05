@@ -1,15 +1,11 @@
+using Microsoft.AspNetCore.Http;
+using Ocelot.Configuration;
+using Ocelot.Infrastructure.RequestData;
+using Ocelot.Logging;
+using Ocelot.Middleware;
+
 namespace Ocelot.Errors.Middleware
 {
-    using Ocelot.Configuration;
-    using Ocelot.Infrastructure.RequestData;
-    using Ocelot.Logging;
-    using Ocelot.Middleware;
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.DownstreamRouteFinder.Middleware;
-
     /// <summary>
     /// Catches all unhandled exceptions thrown by middleware, logs and returns a 500.
     /// </summary>
@@ -52,10 +48,7 @@ namespace Ocelot.Errors.Middleware
             catch (Exception e)
             {
                 Logger.LogDebug("error calling middleware");
-
-                var message = CreateMessage(httpContext, e);
-
-                Logger.LogError(message, e);
+                Logger.LogError(() => CreateMessage(httpContext, e), e);
 
                 SetInternalServerErrorOnResponse(httpContext);
             }
@@ -75,7 +68,7 @@ namespace Ocelot.Errors.Middleware
             _repo.Add("RequestId", httpContext.TraceIdentifier);
         }
 
-        private void SetInternalServerErrorOnResponse(HttpContext httpContext)
+        private static void SetInternalServerErrorOnResponse(HttpContext httpContext)
         {
             if (!httpContext.Response.HasStarted)
             {
@@ -83,7 +76,7 @@ namespace Ocelot.Errors.Middleware
             }
         }
 
-        private string CreateMessage(HttpContext httpContext, Exception e)
+        private static string CreateMessage(HttpContext httpContext, Exception e)
         {
             var message =
                 $"Exception caught in global error handler, exception message: {e.Message}, exception stack: {e.StackTrace}";

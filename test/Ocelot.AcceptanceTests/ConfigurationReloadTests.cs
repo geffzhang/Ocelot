@@ -1,16 +1,14 @@
-﻿using Ocelot.Configuration.File;
-using System;
 using Ocelot.Configuration.ChangeTracking;
-using TestStack.BDDfy;
-using Xunit;
+using Ocelot.Configuration.File;
 
 namespace Ocelot.AcceptanceTests
 {
-    public class ConfigurationReloadTests : IDisposable
+    [Collection(nameof(SequentialTests))]
+    public sealed class ConfigurationReloadTests : IDisposable
     {
-        private FileConfiguration _initialConfig;
-        private FileConfiguration _anotherConfig;
-        private Steps _steps;
+        private readonly FileConfiguration _initialConfig;
+        private readonly FileConfiguration _anotherConfig;
+        private readonly Steps _steps;
 
         public ConfigurationReloadTests()
         {
@@ -20,16 +18,16 @@ namespace Ocelot.AcceptanceTests
             {
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
-                    RequestIdKey = "initialKey"
-                }
+                    RequestIdKey = "initialKey",
+                },
             };
 
             _anotherConfig = new FileConfiguration
             {
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
-                    RequestIdKey = "someOtherKey"
-                }
+                    RequestIdKey = "someOtherKey",
+                },
             };
         }
 
@@ -39,8 +37,7 @@ namespace Ocelot.AcceptanceTests
             this.Given(x => _steps.GivenThereIsAConfiguration(_initialConfig))
                 .And(x => _steps.GivenOcelotIsRunningReloadingConfig(true))
                 .And(x => _steps.GivenThereIsAConfiguration(_anotherConfig))
-                .And(x => _steps.GivenIWait(2500))
-                .And(x => _steps.ThenConfigShouldBe(_anotherConfig))
+                .And(x => _steps.ThenConfigShouldBeWithTimeout(_anotherConfig, 10000))
                 .BDDfy();
         }
 
@@ -50,7 +47,7 @@ namespace Ocelot.AcceptanceTests
             this.Given(x => _steps.GivenThereIsAConfiguration(_initialConfig))
                 .And(x => _steps.GivenOcelotIsRunningReloadingConfig(false))
                 .And(x => _steps.GivenThereIsAConfiguration(_anotherConfig))
-                .And(x => _steps.GivenIWait(2500))
+                .And(x => _steps.GivenIWait(MillisecondsToWaitForChangeToken))
                 .And(x => _steps.ThenConfigShouldBe(_initialConfig))
                 .BDDfy();
         }
@@ -80,7 +77,7 @@ namespace Ocelot.AcceptanceTests
                 .BDDfy();
         }
 
-        private const int MillisecondsToWaitForChangeToken = (int) (OcelotConfigurationChangeToken.PollingIntervalSeconds*1000) - 100;
+        private const int MillisecondsToWaitForChangeToken = (int)(OcelotConfigurationChangeToken.PollingIntervalSeconds * 1000) - 100;
 
         public void Dispose()
         {

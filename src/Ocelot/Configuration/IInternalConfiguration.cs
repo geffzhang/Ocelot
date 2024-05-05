@@ -1,9 +1,5 @@
-using System.Collections.Generic;
-
 namespace Ocelot.Configuration
 {
-    using System;
-
     public interface IInternalConfiguration
     {
         List<Route> Routes { get; }
@@ -22,6 +18,6 @@ namespace Ocelot.Configuration
 
         HttpHandlerOptions HttpHandlerOptions { get; }
 
-        Version DownstreamHttpVersion { get;  }
+        Version DownstreamHttpVersion { get; }
     }
 }

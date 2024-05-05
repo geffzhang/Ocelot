@@ -1,12 +1,9 @@
-﻿namespace Ocelot.Headers.Middleware
-{
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.DownstreamRouteFinder.Middleware;
-    using Ocelot.Logging;
-    using Ocelot.Middleware;
-    using System.Linq;
-    using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
+using Ocelot.Logging;
+using Ocelot.Middleware;
 
+namespace Ocelot.Headers.Middleware
+{
     public class ClaimsToHeadersMiddleware : OcelotMiddleware
     {
         private readonly RequestDelegate _next;
@@ -27,7 +24,7 @@
 
             if (downstreamRoute.ClaimsToHeaders.Any())
             {
-                Logger.LogInformation($"{downstreamRoute.DownstreamPathTemplate.Value} has instructions to convert claims to headers");
+                Logger.LogInformation(() => $"{downstreamRoute.DownstreamPathTemplate.Value} has instructions to convert claims to headers");
 
                 var downstreamRequest = httpContext.Items.DownstreamRequest();
 

@@ -1,7 +1,4 @@
-﻿using Ocelot.Responses;
-using System.Threading.Tasks;
-
-namespace Ocelot.Configuration.Repository
+﻿namespace Ocelot.Configuration.Repository
 {
     public class ConsulFileConfigurationPollerOption : IFileConfigurationPollerOptions
     {
@@ -19,9 +16,9 @@ namespace Ocelot.Configuration.Repository
 
         private int GetDelay()
         {
-            int delay = 1000;
+            var delay = 1000;
 
-            Response<File.FileConfiguration> fileConfig = Task.Run(async () => await _fileConfigurationRepository.Get()).Result;
+            var fileConfig = Task.Run(async () => await _fileConfigurationRepository.Get()).Result;
             if (fileConfig?.Data?.GlobalConfiguration?.ServiceDiscoveryProvider != null &&
                     !fileConfig.IsError &&
                     fileConfig.Data.GlobalConfiguration.ServiceDiscoveryProvider.PollingInterval > 0)
@@ -30,7 +27,7 @@ namespace Ocelot.Configuration.Repository
             }
             else
             {
-                Response<IInternalConfiguration> internalConfig = _internalConfigRepo.Get();
+                var internalConfig = _internalConfigRepo.Get();
                 if (internalConfig?.Data?.ServiceProviderConfiguration != null &&
                 !internalConfig.IsError &&
                 internalConfig.Data.ServiceProviderConfiguration.PollingInterval > 0)

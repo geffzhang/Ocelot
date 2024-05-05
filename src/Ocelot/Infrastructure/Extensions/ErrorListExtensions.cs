@@ -1,6 +1,4 @@
 ﻿using Ocelot.Errors;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Ocelot.Infrastructure.Extensions
 {
@@ -8,8 +6,8 @@ namespace Ocelot.Infrastructure.Extensions
     {
         public static string ToErrorString(this List<Error> errors)
         {
-            var listOfErrorStrings = errors.Select(x => "Error Code: " + x.Code.ToString() + " Message: " + x.Message);
-            return string.Join(" ", listOfErrorStrings);
+            var listOfErrorStrings = errors.Select(x => "Error Code: " + x.Code + " Message: " + x.Message);
+            return string.Join(' ', listOfErrorStrings);
         }
     }
 }

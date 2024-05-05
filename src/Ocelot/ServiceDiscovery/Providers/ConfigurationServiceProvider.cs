@@ -1,6 +1,4 @@
 using Ocelot.Values;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Ocelot.ServiceDiscovery.Providers
 {
@@ -13,7 +11,7 @@ namespace Ocelot.ServiceDiscovery.Providers
             _services = services;
         }
 
-        public async Task<List<Service>> Get()
+        public async Task<List<Service>> GetAsync()
         {
             return await Task.FromResult(_services);
         }

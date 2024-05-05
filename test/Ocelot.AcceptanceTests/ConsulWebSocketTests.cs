@@ -1,19 +1,13 @@
-﻿namespace Ocelot.AcceptanceTests
-{
-    using Configuration.File;
-    using Consul;
-    using Microsoft.AspNetCore.Http;
-    using Newtonsoft.Json;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.Net.WebSockets;
-    using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Consul;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using Ocelot.Configuration.File;
+using Ocelot.WebSockets;
+using System.Net.WebSockets;
+using System.Text;
 
+namespace Ocelot.AcceptanceTests
+{
     public class ConsulWebSocketTests : IDisposable
     {
         private readonly List<string> _secondRecieved;
@@ -32,37 +26,37 @@
         }
 
         [Fact]
-        public void should_proxy_websocket_input_to_downstream_service_and_use_service_discovery_and_load_balancer()
+        public void ShouldProxyWebsocketInputToDownstreamServiceAndUseServiceDiscoveryAndLoadBalancer()
         {
-            var downstreamPort = RandomPortFinder.GetRandomPort();
+            var downstreamPort = PortFinder.GetRandomPort();
             var downstreamHost = "localhost";
 
-            var secondDownstreamPort = RandomPortFinder.GetRandomPort();
+            var secondDownstreamPort = PortFinder.GetRandomPort();
             var secondDownstreamHost = "localhost";
 
             var serviceName = "websockets";
-            var consulPort = RandomPortFinder.GetRandomPort();
+            var consulPort = PortFinder.GetRandomPort();
             var fakeConsulServiceDiscoveryUrl = $"http://localhost:{consulPort}";
-            var serviceEntryOne = new ServiceEntry()
+            var serviceEntryOne = new ServiceEntry
             {
-                Service = new AgentService()
+                Service = new AgentService
                 {
                     Service = serviceName,
                     Address = downstreamHost,
                     Port = downstreamPort,
                     ID = Guid.NewGuid().ToString(),
-                    Tags = new string[0]
+                    Tags = Array.Empty<string>(),
                 },
             };
-            var serviceEntryTwo = new ServiceEntry()
+            var serviceEntryTwo = new ServiceEntry
             {
-                Service = new AgentService()
+                Service = new AgentService
                 {
                     Service = serviceName,
                     Address = secondDownstreamHost,
                     Port = secondDownstreamPort,
                     ID = Guid.NewGuid().ToString(),
-                    Tags = new string[0]
+                    Tags = Array.Empty<string>(),
                 },
             };
 
@@ -70,14 +64,14 @@
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         UpstreamPathTemplate = "/",
                         DownstreamPathTemplate = "/ws",
                         DownstreamScheme = "ws",
                         LoadBalancerOptions = new FileLoadBalancerOptions { Type = "RoundRobin" },
                         ServiceName = serviceName,
-                    }
+                    },
                 },
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
@@ -86,9 +80,9 @@
                         Scheme = "http",
                         Host = "localhost",
                         Port = consulPort,
-                        Type = "consul"
-                    }
-                }
+                        Type = "consul",
+                    },
+                },
             };
 
             this.Given(_ => _steps.GivenThereIsAConfiguration(config))
@@ -132,7 +126,7 @@
                 if (context.Request.Path.Value == $"/v1/health/service/{serviceName}")
                 {
                     var json = JsonConvert.SerializeObject(_serviceEntries);
-                    context.Response.Headers.Add("Content-Type", "application/json");
+                    context.Response.Headers.Append("Content-Type", "application/json");
                     await context.Response.WriteAsync(json);
                 }
             });
@@ -149,14 +143,14 @@
 
         private async Task StartClient(string url)
         {
-            var client = new ClientWebSocket();
+            IClientWebSocket client = new ClientWebSocketProxy();
 
             await client.ConnectAsync(new Uri(url), CancellationToken.None);
 
             var sending = Task.Run(async () =>
             {
-                string line = "test";
-                for (int i = 0; i < 10; i++)
+                var line = "test";
+                for (var i = 0; i < 10; i++)
                 {
                     var bytes = Encoding.UTF8.GetBytes(line);
 
@@ -165,7 +159,7 @@
                     await Task.Delay(10);
                 }
 
-                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
             });
 
             var receiving = Task.Run(async () =>
@@ -186,7 +180,7 @@
                         {
                             // Last version, the client state is CloseReceived
                             // Valid states are: Open, CloseReceived, CloseSent
-                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
                         }
 
                         break;
@@ -201,14 +195,14 @@
         {
             await Task.Delay(500);
 
-            var client = new ClientWebSocket();
+            IClientWebSocket client = new ClientWebSocketProxy();
 
             await client.ConnectAsync(new Uri(url), CancellationToken.None);
 
             var sending = Task.Run(async () =>
             {
-                string line = "test";
-                for (int i = 0; i < 10; i++)
+                var line = "test";
+                for (var i = 0; i < 10; i++)
                 {
                     var bytes = Encoding.UTF8.GetBytes(line);
 
@@ -217,7 +211,7 @@
                     await Task.Delay(10);
                 }
 
-                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
             });
 
             var receiving = Task.Run(async () =>
@@ -238,7 +232,7 @@
                         {
                             // Last version, the client state is CloseReceived
                             // Valid states are: Open, CloseReceived, CloseSent
-                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
                         }
 
                         break;
@@ -251,7 +245,7 @@
 
         private async Task StartFakeDownstreamService(string url, string path)
         {
-            await _serviceHandler.StartFakeDownstreamService(url, path, async (context, next) =>
+            await _serviceHandler.StartFakeDownstreamService(url, async (context, next) =>
             {
                 if (context.Request.Path == path)
                 {
@@ -274,13 +268,13 @@
 
         private async Task StartSecondFakeDownstreamService(string url, string path)
         {
-            await _serviceHandler.StartFakeDownstreamService(url, path, async (context, next) =>
+            await _serviceHandler.StartFakeDownstreamService(url, async (context, next) =>
             {
                 if (context.Request.Path == path)
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {
-                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        var webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         await Message(webSocket);
                     }
                     else
@@ -295,7 +289,7 @@
             });
         }
 
-        private async Task Echo(WebSocket webSocket)
+        private static async Task Echo(WebSocket webSocket)
         {
             try
             {
@@ -318,7 +312,7 @@
             }
         }
 
-        private async Task Message(WebSocket webSocket)
+        private static async Task Message(WebSocket webSocket)
         {
             try
             {
@@ -347,6 +341,7 @@
         {
             _serviceHandler?.Dispose();
             _steps.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -1,6 +1,4 @@
 using Ocelot.Errors;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Ocelot.Responder
 {
@@ -14,8 +12,8 @@ namespace Ocelot.Responder
             }
 
             if (errors.Any(e => e.Code == OcelotErrorCode.UnauthorizedError
-                || e.Code == OcelotErrorCode.ClaimValueNotAuthorisedError
-                || e.Code == OcelotErrorCode.ScopeNotAuthorisedError
+                || e.Code == OcelotErrorCode.ClaimValueNotAuthorizedError
+                || e.Code == OcelotErrorCode.ScopeNotAuthorizedError
                 || e.Code == OcelotErrorCode.UserDoesNotHaveClaimError
                 || e.Code == OcelotErrorCode.CannotFindClaimError))
             {
@@ -55,6 +53,11 @@ namespace Ocelot.Responder
                 || e.Code == OcelotErrorCode.ErrorInvokingLoadBalancerCreator))
             {
                 return 500;
+            }
+
+            if (errors.Any(e => e.Code == OcelotErrorCode.PayloadTooLargeError))
+            {
+                return 413;
             }
 
             return 404;

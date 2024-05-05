@@ -2,8 +2,6 @@
 using Ocelot.Configuration;
 using Ocelot.Infrastructure.Claims.Parser;
 using Ocelot.Responses;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 
 namespace Ocelot.Claims
@@ -37,7 +35,7 @@ namespace Ocelot.Claims
                     identity?.RemoveClaim(exists);
                 }
 
-                identity?.AddClaim(new System.Security.Claims.Claim(config.ExistingKey, value.Data));
+                identity?.AddClaim(new Claim(config.ExistingKey, value.Data));
             }
 
             return new OkResponse();

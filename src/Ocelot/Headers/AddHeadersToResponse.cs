@@ -1,12 +1,10 @@
+using Ocelot.Configuration.Creator;
+using Ocelot.Infrastructure;
+using Ocelot.Logging;
+using Ocelot.Middleware;
+
 namespace Ocelot.Headers
 {
-    using Ocelot.Configuration.Creator;
-    using Ocelot.Infrastructure;
-    using Ocelot.Infrastructure.Extensions;
-    using Ocelot.Logging;
-    using Ocelot.Middleware;
-    using System.Collections.Generic;
-
     public class AddHeadersToResponse : IAddHeadersToResponse
     {
         private readonly IPlaceholders _placeholders;
@@ -28,7 +26,7 @@ namespace Ocelot.Headers
 
                     if (value.IsError)
                     {
-                        _logger.LogWarning($"Unable to add header to response {add.Key}: {add.Value}");
+                        _logger.LogWarning(() => $"Unable to add header to response {add.Key}: {add.Value}");
                         continue;
                     }
 

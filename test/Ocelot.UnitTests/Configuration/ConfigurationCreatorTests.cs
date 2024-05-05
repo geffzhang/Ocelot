@@ -1,17 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
+using Ocelot.Configuration;
+using Ocelot.Configuration.Creator;
+using Ocelot.Configuration.File;
+using Ocelot.DependencyInjection;
+
 namespace Ocelot.UnitTests.Configuration
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using Ocelot.Configuration;
-    using Ocelot.Configuration.Creator;
-    using Ocelot.Configuration.File;
-    using Ocelot.DependencyInjection;
-    using Shouldly;
-    using System.Collections.Generic;
-    using TestStack.BDDfy;
-    using Xunit;
-
-    public class ConfigurationCreatorTests
+    public class ConfigurationCreatorTests : UnitTest
     {
         private ConfigurationCreator _creator;
         private InternalConfiguration _result;
@@ -102,12 +97,12 @@ namespace Ocelot.UnitTests.Configuration
         {
             _fileConfig = new FileConfiguration
             {
-                GlobalConfiguration = new FileGlobalConfiguration()
+                GlobalConfiguration = new FileGlobalConfiguration(),
             };
             _routes = new List<Route>();
-            _spc = new ServiceProviderConfiguration("", "", "", 1, "", "", 1);
+            _spc = new ServiceProviderConfiguration(string.Empty, string.Empty, string.Empty, 1, string.Empty, string.Empty, 1);
             _lbo = new LoadBalancerOptionsBuilder().Build();
-            _qoso = new QoSOptions(1, 1, 1, "");
+            _qoso = new QoSOptions(1, 1, 1, string.Empty);
             _hho = new HttpHandlerOptionsBuilder().Build();
 
             _spcCreator.Setup(x => x.Create(It.IsAny<FileGlobalConfiguration>())).Returns(_spc);

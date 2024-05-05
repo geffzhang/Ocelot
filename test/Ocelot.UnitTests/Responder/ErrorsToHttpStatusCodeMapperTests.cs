@@ -1,15 +1,9 @@
 ﻿using Ocelot.Errors;
 using Ocelot.Responder;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Responder
 {
-    public class ErrorsToHttpStatusCodeMapperTests
+    public class ErrorsToHttpStatusCodeMapperTests : UnitTest
     {
         private readonly IErrorsToHttpStatusCodeMapper _codeMapper;
         private int _result;
@@ -29,8 +23,8 @@ namespace Ocelot.UnitTests.Responder
 
         [Theory]
         [InlineData(OcelotErrorCode.CannotFindClaimError)]
-        [InlineData(OcelotErrorCode.ClaimValueNotAuthorisedError)]
-        [InlineData(OcelotErrorCode.ScopeNotAuthorisedError)]
+        [InlineData(OcelotErrorCode.ClaimValueNotAuthorizedError)]
+        [InlineData(OcelotErrorCode.ScopeNotAuthorizedError)]
         [InlineData(OcelotErrorCode.UnauthorizedError)]
         [InlineData(OcelotErrorCode.UserDoesNotHaveClaimError)]
         public void should_return_forbidden(OcelotErrorCode errorCode)
@@ -90,6 +84,12 @@ namespace Ocelot.UnitTests.Responder
         }
 
         [Fact]
+        public void should_return_request_entity_too_large()
+        {
+            ShouldMapErrorsToStatusCode(new() { OcelotErrorCode.PayloadTooLargeError }, HttpStatusCode.RequestEntityTooLarge);
+        }
+
+        [Fact]
         public void AuthenticationErrorsHaveHighestPriority()
         {
             var errors = new List<OcelotErrorCode>
@@ -104,13 +104,13 @@ namespace Ocelot.UnitTests.Responder
         }
 
         [Fact]
-        public void AuthorisationErrorsHaveSecondHighestPriority()
+        public void AuthorizationErrorsHaveSecondHighestPriority()
         {
             var errors = new List<OcelotErrorCode>
             {
                 OcelotErrorCode.CannotAddDataError,
                 OcelotErrorCode.CannotFindClaimError,
-                OcelotErrorCode.RequestTimedOutError
+                OcelotErrorCode.RequestTimedOutError,
             };
 
             ShouldMapErrorsToStatusCode(errors, HttpStatusCode.Forbidden);
@@ -134,7 +134,7 @@ namespace Ocelot.UnitTests.Responder
             // If this test fails then it's because the number of error codes has changed.
             // You should make the appropriate changes to the test cases here to ensure
             // they cover all the error codes, and then modify this assertion.
-            Enum.GetNames(typeof(OcelotErrorCode)).Length.ShouldBe(41, "Looks like the number of error codes has changed. Do you need to modify ErrorsToHttpStatusCodeMapper?");
+            Enum.GetNames(typeof(OcelotErrorCode)).Length.ShouldBe(42, "Looks like the number of error codes has changed. Do you need to modify ErrorsToHttpStatusCodeMapper?");
         }
 
         private void ShouldMapErrorToStatusCode(OcelotErrorCode errorCode, HttpStatusCode expectedHttpStatusCode)

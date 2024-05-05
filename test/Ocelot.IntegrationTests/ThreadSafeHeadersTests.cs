@@ -6,15 +6,7 @@ using Newtonsoft.Json;
 using Ocelot.Configuration.File;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using Shouldly;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.IntegrationTests
 {
@@ -38,22 +30,23 @@ namespace Ocelot.IntegrationTests
         }
 
         [Fact]
-        public void should_return_same_response_for_each_different_header_under_load_to_downsteam_service()
+        public void Should_return_same_response_for_each_different_header_under_load_to_downsteam_service()
         {
+            var port = PortFinder.GetRandomPort();
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamScheme = "http",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
-                                    Port = 51611,
+                                    Port = port,
                                 },
                             },
                             UpstreamPathTemplate = "/",
@@ -63,7 +56,7 @@ namespace Ocelot.IntegrationTests
             };
 
             this.Given(x => GivenThereIsAConfiguration(configuration))
-                .And(x => GivenThereIsAServiceRunningOn("http://localhost:51611"))
+                .And(x => GivenThereIsAServiceRunningOn($"http://localhost:{port}"))
                 .And(x => GivenOcelotIsRunning())
                 .When(x => WhenIGetUrlOnTheApiGatewayMultipleTimesWithDifferentHeaderValues("/", 300))
                 .Then(x => ThenTheSameHeaderValuesAreReturnedByTheDownstreamService())
@@ -122,7 +115,7 @@ namespace Ocelot.IntegrationTests
             _builder.Start();
         }
 
-        private void GivenThereIsAConfiguration(FileConfiguration fileConfiguration)
+        private static void GivenThereIsAConfiguration(FileConfiguration fileConfiguration)
         {
             var configurationPath = $"{Directory.GetCurrentDirectory()}/ocelot.json";
 
@@ -135,7 +128,7 @@ namespace Ocelot.IntegrationTests
 
             File.WriteAllText(configurationPath, jsonConfiguration);
 
-            var text = File.ReadAllText(configurationPath);
+            _ = File.ReadAllText(configurationPath);
 
             configurationPath = $"{AppContext.BaseDirectory}/ocelot.json";
 
@@ -146,14 +139,14 @@ namespace Ocelot.IntegrationTests
 
             File.WriteAllText(configurationPath, jsonConfiguration);
 
-            text = File.ReadAllText(configurationPath);
+            _ = File.ReadAllText(configurationPath);
         }
 
         private void WhenIGetUrlOnTheApiGatewayMultipleTimesWithDifferentHeaderValues(string url, int times)
         {
             var tasks = new Task[times];
 
-            for (int i = 0; i < times; i++)
+            for (var i = 0; i < times; i++)
             {
                 var urlCopy = url;
                 var random = _random.Next(0, 50);
@@ -169,7 +162,7 @@ namespace Ocelot.IntegrationTests
             request.Headers.Add("ThreadSafeHeadersTest", new List<string> { random.ToString() });
             var response = await _httpClient.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
-            int result = int.Parse(content);
+            var result = int.Parse(content);
             var tshtr = new ThreadSafeHeadersTestResult(result, random);
             _results.Add(tshtr);
         }
@@ -187,6 +180,7 @@ namespace Ocelot.IntegrationTests
             _builder?.Dispose();
             _httpClient?.Dispose();
             _downstreamBuilder?.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private class ThreadSafeHeadersTestResult
@@ -197,8 +191,8 @@ namespace Ocelot.IntegrationTests
                 Random = random;
             }
 
-            public int Result { get; private set; }
-            public int Random { get; private set; }
+            public int Result { get; }
+            public int Random { get; }
         }
     }
 }

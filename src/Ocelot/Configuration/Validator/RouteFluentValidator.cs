@@ -1,13 +1,9 @@
-﻿namespace Ocelot.Configuration.Validator
-{
-    using Ocelot.Configuration.File;
-    using FluentValidation;
-    using Microsoft.AspNetCore.Authentication;
-    using System.Linq;
-    using System.Text.RegularExpressions;
-    using System.Threading;
-    using System.Threading.Tasks;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
+using Ocelot.Configuration.File;
 
+namespace Ocelot.Configuration.Validator
+{
     public class RouteFluentValidator : AbstractValidator<FileRoute>
     {
         private readonly IAuthenticationSchemeProvider _authenticationSchemeProvider;
@@ -90,18 +86,19 @@
             });
         }
 
-        private async Task<bool> IsSupportedAuthenticationProviders(FileAuthenticationOptions authenticationOptions, CancellationToken cancellationToken)
+        private async Task<bool> IsSupportedAuthenticationProviders(FileAuthenticationOptions options, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(authenticationOptions.AuthenticationProviderKey))
+            if (string.IsNullOrEmpty(options.AuthenticationProviderKey)
+                && options.AuthenticationProviderKeys.Length == 0)
             {
                 return true;
             }
 
             var schemes = await _authenticationSchemeProvider.GetAllSchemesAsync();
-
             var supportedSchemes = schemes.Select(scheme => scheme.Name).ToList();
-
-            return supportedSchemes.Contains(authenticationOptions.AuthenticationProviderKey);
+            var primary = options.AuthenticationProviderKey;
+            return !string.IsNullOrEmpty(primary) && supportedSchemes.Contains(primary)
+                || (string.IsNullOrEmpty(primary) && options.AuthenticationProviderKeys.All(supportedSchemes.Contains));
         }
 
         private static bool IsValidPeriod(FileRateLimitRule rateLimitOptions)
@@ -111,7 +108,7 @@
                 return false;
             }
 
-            var period = rateLimitOptions.Period;
+            var period = rateLimitOptions.Period.Trim();
 
             var secondsRegEx = new Regex("^[0-9]+s");
             var minutesRegEx = new Regex("^[0-9]+m");
@@ -119,9 +116,9 @@
             var daysRegEx = new Regex("^[0-9]+d");
 
             return secondsRegEx.Match(period).Success
-                   || minutesRegEx.Match(period).Success
-                   || hoursRegEx.Match(period).Success
-                   || daysRegEx.Match(period).Success;
+                || minutesRegEx.Match(period).Success
+                || hoursRegEx.Match(period).Success
+                || daysRegEx.Match(period).Success;
         }
     }
 }

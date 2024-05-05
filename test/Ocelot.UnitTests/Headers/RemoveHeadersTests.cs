@@ -1,13 +1,9 @@
 ﻿using Ocelot.Middleware;
 using Ocelot.Responses;
-using Shouldly;
-using System.Collections.Generic;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Headers
 {
-    public class RemoveHeadersTests
+    public class RemoveHeadersTests : UnitTest
     {
         private List<Header> _headers;
         private readonly Ocelot.Headers.RemoveOutputHeaders _removeOutputHeaders;
@@ -21,9 +17,9 @@ namespace Ocelot.UnitTests.Headers
         [Fact]
         public void should_remove_header()
         {
-            var headers = new List<Header>()
+            var headers = new List<Header>
             {
-                new Header("Transfer-Encoding", new List<string> {"chunked"})
+                new("Transfer-Encoding", new List<string> {"chunked"}),
             };
 
             this.Given(x => x.GivenAHttpContext(headers))

@@ -1,11 +1,9 @@
+using Ocelot.Cache;
+using Ocelot.Configuration.Builder;
+using Ocelot.Configuration.File;
+
 namespace Ocelot.Configuration.Creator
 {
-    using Ocelot.Configuration.Builder;
-    using Ocelot.Cache;
-    using Ocelot.Configuration.File;
-    using System.Collections.Generic;
-    using System.Linq;
-
     public class RoutesCreator : IRoutesCreator
     {
         private readonly ILoadBalancerOptionsCreator _loadBalancerOptionsCreator;
@@ -119,12 +117,12 @@ namespace Ocelot.Configuration.Creator
                 .WithClaimsToHeaders(claimsToHeaders)
                 .WithClaimsToClaims(claimsToClaims)
                 .WithRouteClaimsRequirement(fileRoute.RouteClaimsRequirement)
-                .WithIsAuthorised(fileRouteOptions.IsAuthorised)
+                .WithIsAuthorized(fileRouteOptions.IsAuthorized)
                 .WithClaimsToQueries(claimsToQueries)
                 .WithClaimsToDownstreamPath(claimsToDownstreamPath)
                 .WithRequestIdKey(requestIdKey)
                 .WithIsCached(fileRouteOptions.IsCached)
-                .WithCacheOptions(new CacheOptions(fileRoute.FileCacheOptions.TtlSeconds, region))
+                .WithCacheOptions(new CacheOptions(fileRoute.FileCacheOptions.TtlSeconds, region, fileRoute.FileCacheOptions.Header))
                 .WithDownstreamScheme(fileRoute.DownstreamScheme)
                 .WithLoadBalancerOptions(lbOptions)
                 .WithDownstreamAddresses(downstreamAddresses)

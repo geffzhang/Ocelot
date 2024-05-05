@@ -1,21 +1,17 @@
-﻿namespace Ocelot.Provider.Consul
+﻿namespace Ocelot.Provider.Consul;
+
+public class ConsulClientFactory : IConsulClientFactory
 {
-    using global::Consul;
-    using System;
+    public IConsulClient Get(ConsulRegistryConfiguration config)
+        => new ConsulClient(c => OverrideConfig(c, config));
 
-    public class ConsulClientFactory : IConsulClientFactory
+    private static void OverrideConfig(ConsulClientConfiguration to, ConsulRegistryConfiguration from)
     {
-        public IConsulClient Get(ConsulRegistryConfiguration config)
-        {
-            return new ConsulClient(c =>
-            {
-                c.Address = new Uri($"{config.Scheme}://{config.Host}:{config.Port}");
+        to.Address = new Uri($"{from.Scheme}://{from.Host}:{from.Port}");
 
-                if (!string.IsNullOrEmpty(config?.Token))
-                {
-                    c.Token = config.Token;
-                }
-            });
+        if (!string.IsNullOrEmpty(from?.Token))
+        {
+            to.Token = from.Token;
         }
     }
 }

@@ -1,17 +1,15 @@
-﻿namespace Ocelot.Headers
-{
-    using Infrastructure;
-    using Logging;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Primitives;
-    using Ocelot.Configuration;
-    using Ocelot.Configuration.Creator;
-    using Ocelot.Infrastructure.Claims.Parser;
-    using Ocelot.Request.Middleware;
-    using Ocelot.Responses;
-    using System.Collections.Generic;
-    using System.Linq;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using Ocelot.Configuration;
+using Ocelot.Configuration.Creator;
+using Ocelot.Infrastructure;
+using Ocelot.Infrastructure.Claims.Parser;
+using Ocelot.Logging;
+using Ocelot.Request.Middleware;
+using Ocelot.Responses;
 
+namespace Ocelot.Headers
+{
     public class AddHeadersToRequest : IAddHeadersToRequest
     {
         private readonly IClaimsParser _claimsParser;
@@ -60,21 +58,21 @@
                     requestHeader.Remove(header.Key);
                 }
 
-                if (header.Value.StartsWith("{") && header.Value.EndsWith("}"))
+                if (header.Value.StartsWith('{') && header.Value.EndsWith("}"))
                 {
                     var value = _placeholders.Get(header.Value);
 
                     if (value.IsError)
                     {
-                        _logger.LogWarning($"Unable to add header to response {header.Key}: {header.Value}");
+                        _logger.LogWarning(() => $"Unable to add header to response {header.Key}: {header.Value}");
                         continue;
                     }
 
-                    requestHeader.Add(header.Key, new StringValues(value.Data));
+                    requestHeader.Append(header.Key, new StringValues(value.Data));
                 }
                 else
                 {
-                    requestHeader.Add(header.Key, header.Value);
+                    requestHeader.Append(header.Key, header.Value);
                 }
             }
         }

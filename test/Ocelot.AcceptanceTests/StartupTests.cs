@@ -1,17 +1,10 @@
-﻿namespace Ocelot.AcceptanceTests
-{
-    using Configuration.Repository;
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.Configuration.File;
-    using Responses;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Net;
-    using System.Threading.Tasks;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Microsoft.AspNetCore.Http;
+using Ocelot.Configuration.File;
+using Ocelot.Configuration.Repository;
+using Ocelot.Responses;
 
+namespace Ocelot.AcceptanceTests
+{
     public class StartupTests : IDisposable
     {
         private readonly Steps _steps;
@@ -27,28 +20,28 @@
         [Fact]
         public void should_not_try_and_write_to_disk_on_startup_when_not_using_admin_api()
         {
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         DownstreamPathTemplate = "/",
                         DownstreamScheme = "http",
                         DownstreamHostAndPorts = new List<FileHostAndPort>
                         {
-                            new FileHostAndPort
+                            new()
                             {
                                 Host = "localhost",
                                 Port = port,
-                            }
+                            },
                         },
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "Get" },
-                    }
-                }
+                    },
+                },
             };
 
             var fakeRepo = new FakeFileConfigurationRepository();

@@ -1,15 +1,13 @@
-﻿namespace Ocelot.Provider.Eureka
-{
-    using Configuration;
-    using Configuration.Repository;
-    using Microsoft.Extensions.DependencyInjection;
-    using Middleware;
-    using Steeltoe.Discovery.Client;
-    using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Ocelot.Configuration;
+using Ocelot.Configuration.Repository;
+using Ocelot.Middleware;
 
+namespace Ocelot.Provider.Eureka
+{
     public class EurekaMiddlewareConfigurationProvider
     {
-        public static OcelotMiddlewareConfigurationDelegate Get = builder =>
+        public static OcelotMiddlewareConfigurationDelegate Get { get; } = builder =>
         {
             var internalConfigRepo = builder.ApplicationServices.GetService<IInternalConfigurationRepository>();
 
@@ -17,7 +15,7 @@
 
             if (UsingEurekaServiceDiscoveryProvider(config.Data))
             {
-                builder.UseDiscoveryClient();
+                //builder.UseDiscoveryClient();
             }
 
             return Task.CompletedTask;

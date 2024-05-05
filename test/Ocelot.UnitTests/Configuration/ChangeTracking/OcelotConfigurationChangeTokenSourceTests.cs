@@ -1,11 +1,8 @@
+using Ocelot.Configuration.ChangeTracking;
+
 namespace Ocelot.UnitTests.Configuration.ChangeTracking
 {
-    using Ocelot.Configuration.ChangeTracking;
-    using Shouldly;
-    using TestStack.BDDfy;
-    using Xunit;
-
-    public class OcelotConfigurationChangeTokenSourceTests
+    public class OcelotConfigurationChangeTokenSourceTests : UnitTest
     {
         private readonly IOcelotConfigurationChangeTokenSource _source;
 

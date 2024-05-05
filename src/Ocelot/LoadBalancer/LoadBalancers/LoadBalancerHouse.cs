@@ -1,8 +1,6 @@
 ﻿using Ocelot.Configuration;
+using Ocelot.Errors;
 using Ocelot.Responses;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace Ocelot.LoadBalancer.LoadBalancers
 {
@@ -21,45 +19,40 @@ namespace Ocelot.LoadBalancer.LoadBalancers
         {
             try
             {
-                Response<ILoadBalancer> result;
-
                 if (_loadBalancers.TryGetValue(route.LoadBalancerKey, out var loadBalancer))
                 {
-                    loadBalancer = _loadBalancers[route.LoadBalancerKey];
-
+                    // TODO Fix ugly reflection issue of dymanic detection in favor of static type property
                     if (route.LoadBalancerOptions.Type != loadBalancer.GetType().Name)
                     {
-                        result = _factory.Get(route, config);
-                        if (result.IsError)
-                        {
-                            return new ErrorResponse<ILoadBalancer>(result.Errors);
-                        }
-
-                        loadBalancer = result.Data;
-                        AddLoadBalancer(route.LoadBalancerKey, loadBalancer);
+                        return GetResponse(route, config);
                     }
 
                     return new OkResponse<ILoadBalancer>(loadBalancer);
                 }
 
-                result = _factory.Get(route, config);
-
-                if (result.IsError)
-                {
-                    return new ErrorResponse<ILoadBalancer>(result.Errors);
-                }
-
-                loadBalancer = result.Data;
-                AddLoadBalancer(route.LoadBalancerKey, loadBalancer);
-                return new OkResponse<ILoadBalancer>(loadBalancer);
+                return GetResponse(route, config);
             }
             catch (Exception ex)
             {
-                return new ErrorResponse<ILoadBalancer>(new List<Ocelot.Errors.Error>()
+                return new ErrorResponse<ILoadBalancer>(new List<Error>()
                 {
-                    new UnableToFindLoadBalancerError($"unabe to find load balancer for {route.LoadBalancerKey} exception is {ex}"),
+                    new UnableToFindLoadBalancerError($"Unable to find load balancer for '{route.LoadBalancerKey}'. Exception: {ex};"),
                 });
             }
+        }
+
+        private Response<ILoadBalancer> GetResponse(DownstreamRoute route, ServiceProviderConfiguration config)
+        {
+            var result = _factory.Get(route, config);
+
+            if (result.IsError)
+            {
+                return new ErrorResponse<ILoadBalancer>(result.Errors);
+            }
+
+            var loadBalancer = result.Data;
+            AddLoadBalancer(route.LoadBalancerKey, loadBalancer);
+            return new OkResponse<ILoadBalancer>(loadBalancer);
         }
 
         private void AddLoadBalancer(string key, ILoadBalancer loadBalancer)

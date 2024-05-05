@@ -1,14 +1,10 @@
+using Microsoft.AspNetCore.Http;
+using Ocelot.Logging;
+using Ocelot.Middleware;
+using Ocelot.Responses;
+
 namespace Ocelot.Requester.Middleware
 {
-    using Microsoft.AspNetCore.Http;
-    using System.Net;
-    using System.Net.Http;
-    using Ocelot.Logging;
-    using Ocelot.Middleware;
-    using System.Threading.Tasks;
-    using Ocelot.Responses;
-    using Ocelot.DownstreamRouteFinder.Middleware;
-
     public class HttpRequesterMiddleware : OcelotMiddleware
     {
         private readonly RequestDelegate _next;
@@ -25,10 +21,7 @@ namespace Ocelot.Requester.Middleware
 
         public async Task Invoke(HttpContext httpContext)
         {
-            var downstreamRoute = httpContext.Items.DownstreamRoute();
-
             var response = await _requester.GetResponse(httpContext);
-
             CreateLogBasedOnResponse(response);
 
             if (response.IsError)
@@ -40,23 +33,25 @@ namespace Ocelot.Requester.Middleware
             }
 
             Logger.LogDebug("setting http response message");
-
             httpContext.Items.UpsertDownstreamResponse(new DownstreamResponse(response.Data));
-
             await _next.Invoke(httpContext);
         }
 
         private void CreateLogBasedOnResponse(Response<HttpResponseMessage> response)
         {
-            if (response.Data?.StatusCode <= HttpStatusCode.BadRequest)
+            var status = response.Data?.StatusCode ?? HttpStatusCode.Processing;
+            var reason = response.Data?.ReasonPhrase ?? "unknown";
+            var uri = response.Data?.RequestMessage?.RequestUri?.ToString() ?? string.Empty;
+
+            string message() => $"{(int)status} ({reason}) status code of request URI: {uri}.";
+
+            if (status < HttpStatusCode.BadRequest)
             {
-                Logger.LogInformation(
-                    $"{(int)response.Data.StatusCode} ({response.Data.ReasonPhrase}) status code, request uri: {response.Data.RequestMessage?.RequestUri}");
-            } 
-            else if (response.Data?.StatusCode >= HttpStatusCode.BadRequest)
+                Logger.LogInformation(message);
+            }
+            else
             {
-                Logger.LogWarning(
-                    $"{(int) response.Data.StatusCode} ({response.Data.ReasonPhrase}) status code, request uri: {response.Data.RequestMessage?.RequestUri}");
+                Logger.LogWarning(message);
             }
         }
     }

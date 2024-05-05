@@ -1,13 +1,10 @@
-﻿namespace Ocelot.DownstreamPathManipulation.Middleware
-{
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Ocelot.Logging;
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.Middleware;
-    using Ocelot.PathManipulation;
-    using Ocelot.DownstreamRouteFinder.Middleware;
+﻿using Microsoft.AspNetCore.Http;
+using Ocelot.Logging;
+using Ocelot.Middleware;
+using Ocelot.PathManipulation;
 
+namespace Ocelot.DownstreamPathManipulation.Middleware
+{
     public class ClaimsToDownstreamPathMiddleware : OcelotMiddleware
     {
         private readonly RequestDelegate _next;
@@ -28,7 +25,7 @@
 
             if (downstreamRoute.ClaimsToPath.Any())
             {
-                Logger.LogInformation($"{downstreamRoute.DownstreamPathTemplate.Value} has instructions to convert claims to path");
+                Logger.LogInformation(() => $"{downstreamRoute.DownstreamPathTemplate.Value} has instructions to convert claims to path");
 
                 var templatePlaceholderNameAndValues = httpContext.Items.TemplatePlaceholderNameAndValues();
 

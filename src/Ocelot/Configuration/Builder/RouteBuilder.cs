@@ -1,11 +1,8 @@
-﻿namespace Ocelot.Configuration.Builder
-{
-    using Ocelot.Configuration.File;
-    using Ocelot.Values;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Net.Http;
+﻿using Ocelot.Configuration.File;
+using Ocelot.Values;
 
+namespace Ocelot.Configuration.Builder
+{
     public class RouteBuilder
     {
         private UpstreamPathTemplate _upstreamTemplatePattern;

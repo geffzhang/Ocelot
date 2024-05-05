@@ -1,12 +1,12 @@
-﻿namespace Ocelot.Provider.Consul
-{
-    using Ocelot.Errors;
+﻿using Ocelot.Errors;
+using HttpStatus = System.Net.HttpStatusCode;
 
-    public class UnableToSetConfigInConsulError : Error
+namespace Ocelot.Provider.Consul;
+
+public class UnableToSetConfigInConsulError : Error
+{
+    public UnableToSetConfigInConsulError(string s)
+        : base(s, OcelotErrorCode.UnknownError, (int)HttpStatus.NotFound)
     {
-        public UnableToSetConfigInConsulError(string s)
-            : base(s, OcelotErrorCode.UnknownError, 404)
-        {
-        }
     }
 }

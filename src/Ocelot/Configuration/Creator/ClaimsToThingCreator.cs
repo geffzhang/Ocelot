@@ -1,6 +1,5 @@
 using Ocelot.Configuration.Parser;
 using Ocelot.Logging;
-using System.Collections.Generic;
 
 namespace Ocelot.Configuration.Creator
 {
@@ -26,7 +25,7 @@ namespace Ocelot.Configuration.Creator
 
                 if (claimToThing.IsError)
                 {
-                    _logger.LogDebug($"Unable to extract configuration for key: {input.Key} and value: {input.Value} your configuration file is incorrect");
+                    _logger.LogDebug(() => $"Unable to extract configuration for key: {input.Key} and value: {input.Value} your configuration file is incorrect");
                 }
                 else
                 {

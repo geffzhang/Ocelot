@@ -1,26 +1,19 @@
+using Microsoft.AspNetCore.Http;
+using Ocelot.Configuration;
+using Ocelot.Configuration.File;
+using Ocelot.LoadBalancer.LoadBalancers;
+using Ocelot.Responses;
+using Ocelot.ServiceDiscovery.Providers;
+using Ocelot.Values;
+
 namespace Ocelot.AcceptanceTests
 {
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.Configuration.File;
-    using Ocelot.LoadBalancer.LoadBalancers;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Configuration;
-    using Middleware;
-    using Responses;
-    using ServiceDiscovery.Providers;
-    using TestStack.BDDfy;
-    using Values;
-    using Xunit;
-
     public class LoadBalancerTests : IDisposable
     {
         private readonly Steps _steps;
         private int _counterOne;
         private int _counterTwo;
-        private static readonly object _syncLock = new object();
+        private static readonly object SyncLock = new();
         private readonly ServiceHandler _serviceHandler;
 
         public LoadBalancerTests()
@@ -32,8 +25,8 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_load_balance_request_with_least_connection()
         {
-            int portOne = RandomPortFinder.GetRandomPort();
-            int portTwo = RandomPortFinder.GetRandomPort();
+            var portOne = PortFinder.GetRandomPort();
+            var portTwo = PortFinder.GetRandomPort();
 
             var downstreamServiceOneUrl = $"http://localhost:{portOne}";
             var downstreamServiceTwoUrl = $"http://localhost:{portTwo}";
@@ -42,7 +35,7 @@ namespace Ocelot.AcceptanceTests
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamScheme = "http",
@@ -51,22 +44,20 @@ namespace Ocelot.AcceptanceTests
                             LoadBalancerOptions = new FileLoadBalancerOptions { Type = nameof(LeastConnection) },
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
-                                    Port = portOne
+                                    Port = portOne,
                                 },
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
-                                    Port = portTwo
-                                }
-                            }
-                        }
+                                    Port = portTwo,
+                                },
+                            },
+                        },
                     },
-                GlobalConfiguration = new FileGlobalConfiguration()
-                {
-                }
+                GlobalConfiguration = new FileGlobalConfiguration(),
             };
 
             this.Given(x => x.GivenProductServiceOneIsRunning(downstreamServiceOneUrl, 200))
@@ -82,8 +73,8 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_load_balance_request_with_round_robin()
         {
-            var downstreamPortOne = RandomPortFinder.GetRandomPort();
-            var downstreamPortTwo = RandomPortFinder.GetRandomPort();
+            var downstreamPortOne = PortFinder.GetRandomPort();
+            var downstreamPortTwo = PortFinder.GetRandomPort();
             var downstreamServiceOneUrl = $"http://localhost:{downstreamPortOne}";
             var downstreamServiceTwoUrl = $"http://localhost:{downstreamPortTwo}";
 
@@ -91,7 +82,7 @@ namespace Ocelot.AcceptanceTests
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamScheme = "http",
@@ -100,22 +91,20 @@ namespace Ocelot.AcceptanceTests
                             LoadBalancerOptions = new FileLoadBalancerOptions { Type = nameof(RoundRobin) },
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
-                                    Port = downstreamPortOne
+                                    Port = downstreamPortOne,
                                 },
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
-                                    Port = downstreamPortTwo
-                                }
-                            }
-                        }
+                                    Port = downstreamPortTwo,
+                                },
+                            },
+                        },
                     },
-                GlobalConfiguration = new FileGlobalConfiguration()
-                {
-                }
+                GlobalConfiguration = new FileGlobalConfiguration(),
             };
 
             this.Given(x => x.GivenProductServiceOneIsRunning(downstreamServiceOneUrl, 200))
@@ -131,8 +120,8 @@ namespace Ocelot.AcceptanceTests
         [Fact]
         public void should_load_balance_request_with_custom_load_balancer()
         {
-            var downstreamPortOne = RandomPortFinder.GetRandomPort();
-            var downstreamPortTwo = RandomPortFinder.GetRandomPort();
+            var downstreamPortOne = PortFinder.GetRandomPort();
+            var downstreamPortTwo = PortFinder.GetRandomPort();
             var downstreamServiceOneUrl = $"http://localhost:{downstreamPortOne}";
             var downstreamServiceTwoUrl = $"http://localhost:{downstreamPortTwo}";
 
@@ -140,7 +129,7 @@ namespace Ocelot.AcceptanceTests
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamScheme = "http",
@@ -149,12 +138,12 @@ namespace Ocelot.AcceptanceTests
                             LoadBalancerOptions = new FileLoadBalancerOptions { Type = nameof(CustomLoadBalancer) },
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = downstreamPortOne,
                                 },
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = downstreamPortTwo,
@@ -165,7 +154,7 @@ namespace Ocelot.AcceptanceTests
                 GlobalConfiguration = new FileGlobalConfiguration(),
             };
 
-            Func<IServiceProvider, DownstreamRoute, IServiceDiscoveryProvider, CustomLoadBalancer> loadBalancerFactoryFunc = (serviceProvider, route, serviceDiscoveryProvider) => new CustomLoadBalancer(serviceDiscoveryProvider.Get);
+            Func<IServiceProvider, DownstreamRoute, IServiceDiscoveryProvider, CustomLoadBalancer> loadBalancerFactoryFunc = (serviceProvider, route, serviceDiscoveryProvider) => new CustomLoadBalancer(serviceDiscoveryProvider.GetAsync);
 
             this.Given(x => x.GivenProductServiceOneIsRunning(downstreamServiceOneUrl, 200))
                 .And(x => x.GivenProductServiceTwoIsRunning(downstreamServiceTwoUrl, 200))
@@ -180,7 +169,7 @@ namespace Ocelot.AcceptanceTests
         private class CustomLoadBalancer : ILoadBalancer
         {
             private readonly Func<Task<List<Service>>> _services;
-            private readonly object _lock = new object();
+            private readonly object _lock = new();
 
             private int _last;
 
@@ -205,7 +194,7 @@ namespace Ocelot.AcceptanceTests
                 }
             }
 
-        public void Release(ServiceHostAndPort hostAndPort)
+            public void Release(ServiceHostAndPort hostAndPort)
             {
             }
         }
@@ -228,8 +217,8 @@ namespace Ocelot.AcceptanceTests
             {
                 try
                 {
-                    var response = string.Empty;
-                    lock (_syncLock)
+                    string response;
+                    lock (SyncLock)
                     {
                         _counterOne++;
                         response = _counterOne.ToString();
@@ -251,8 +240,8 @@ namespace Ocelot.AcceptanceTests
             {
                 try
                 {
-                    var response = string.Empty;
-                    lock (_syncLock)
+                    string response;
+                    lock (SyncLock)
                     {
                         _counterTwo++;
                         response = _counterTwo.ToString();

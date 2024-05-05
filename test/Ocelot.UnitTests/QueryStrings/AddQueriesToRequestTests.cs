@@ -1,22 +1,14 @@
-﻿using Moq;
-using Ocelot.Configuration;
+﻿using Ocelot.Configuration;
 using Ocelot.Errors;
 using Ocelot.Infrastructure.Claims.Parser;
 using Ocelot.QueryStrings;
 using Ocelot.Request.Middleware;
 using Ocelot.Responses;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.QueryStrings
 {
-    public class AddQueriesToRequestTests
+    public class AddQueriesToRequestTests : UnitTest
     {
         private readonly AddQueriesToRequest _addQueriesToRequest;
         private DownstreamRequest _downstreamRequest;
@@ -40,13 +32,13 @@ namespace Ocelot.UnitTests.QueryStrings
         {
             var claims = new List<Claim>
             {
-                new Claim("test", "data")
+                new("test", "data"),
             };
 
             this.Given(
                 x => x.GivenAClaimToThing(new List<ClaimToThing>
                 {
-                    new ClaimToThing("query-key", "", "", 0)
+                    new("query-key", string.Empty, string.Empty, 0),
                 }))
                 .Given(x => x.GivenClaims(claims))
                 .And(x => x.GivenTheClaimParserReturns(new OkResponse<string>("value")))
@@ -61,13 +53,13 @@ namespace Ocelot.UnitTests.QueryStrings
         {
             var claims = new List<Claim>
             {
-                new Claim("test", "data")
+                new("test", "data"),
             };
 
             this.Given(
                 x => x.GivenAClaimToThing(new List<ClaimToThing>
                 {
-                    new ClaimToThing("query-key", "", "", 0)
+                    new("query-key", string.Empty, string.Empty, 0),
                 }))
                 .Given(x => x.GivenClaims(claims))
                 .And(x => GivenTheDownstreamRequestHasQueryString("?test=1&test=2"))
@@ -89,13 +81,13 @@ namespace Ocelot.UnitTests.QueryStrings
         {
             var claims = new List<Claim>
             {
-                new Claim("test", "data")
+                new("test", "data"),
             };
 
             this.Given(
                 x => x.GivenAClaimToThing(new List<ClaimToThing>
                 {
-                    new ClaimToThing("query-key", "", "", 0)
+                    new("query-key", string.Empty, string.Empty, 0),
                 }))
                 .And(x => x.GivenClaims(claims))
                 .And(x => x.GivenTheDownstreamRequestHasQueryString("query-key", "initial"))
@@ -112,12 +104,12 @@ namespace Ocelot.UnitTests.QueryStrings
             this.Given(
                x => x.GivenAClaimToThing(new List<ClaimToThing>
                {
-                    new ClaimToThing("", "", "", 0)
+                    new(string.Empty, string.Empty, string.Empty, 0),
                }))
                .Given(x => x.GivenClaims(new List<Claim>()))
                .And(x => x.GivenTheClaimParserReturns(new ErrorResponse<string>(new List<Error>
                {
-                   new AnyError()
+                   new AnyError(),
                })))
                .When(x => x.WhenIAddQueriesToTheRequest())
                .Then(x => x.ThenTheResultIsError())

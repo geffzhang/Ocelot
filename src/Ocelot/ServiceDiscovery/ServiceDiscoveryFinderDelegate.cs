@@ -1,8 +1,6 @@
-namespace Ocelot.ServiceDiscovery
-{
-    using Ocelot.Configuration;
-    using Providers;
-    using System;
+using Ocelot.Configuration;
+using Ocelot.ServiceDiscovery.Providers;
 
-    public delegate IServiceDiscoveryProvider ServiceDiscoveryFinderDelegate(IServiceProvider provider, ServiceProviderConfiguration config, DownstreamRoute route);
-}
+namespace Ocelot.ServiceDiscovery;
+
+public delegate IServiceDiscoveryProvider ServiceDiscoveryFinderDelegate(IServiceProvider provider, ServiceProviderConfiguration config, DownstreamRoute route);

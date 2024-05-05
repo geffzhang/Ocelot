@@ -1,26 +1,20 @@
-using Moq;
 using Ocelot.Configuration;
 using Ocelot.Configuration.Creator;
 using Ocelot.Configuration.Parser;
 using Ocelot.Errors;
 using Ocelot.Logging;
 using Ocelot.Responses;
-using Shouldly;
-using System.Collections.Generic;
-using System.Linq;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration
 {
-    public class ClaimsToThingCreatorTests
+    public class ClaimsToThingCreatorTests : UnitTest
     {
         private readonly Mock<IClaimToThingConfigurationParser> _configParser;
         private Dictionary<string, string> _claimsToThings;
-        private ClaimsToThingCreator _claimsToThingsCreator;
-        private Mock<IOcelotLoggerFactory> _loggerFactory;
+        private readonly ClaimsToThingCreator _claimsToThingsCreator;
+        private readonly Mock<IOcelotLoggerFactory> _loggerFactory;
         private List<ClaimToThing> _result;
-        private Mock<IOcelotLogger> _logger;
+        private readonly Mock<IOcelotLogger> _logger;
 
         public ClaimsToThingCreatorTests()
         {
@@ -36,12 +30,12 @@ namespace Ocelot.UnitTests.Configuration
         [Fact]
         public void should_return_claims_to_things()
         {
-            var userInput = new Dictionary<string, string>()
+            var userInput = new Dictionary<string, string>
             {
-                {"CustomerId", "Claims[CustomerId] > value"}
+                {"CustomerId", "Claims[CustomerId] > value"},
             };
 
-            var claimsToThing = new OkResponse<ClaimToThing>(new ClaimToThing("CustomerId", "CustomerId", "", 0));
+            var claimsToThing = new OkResponse<ClaimToThing>(new ClaimToThing("CustomerId", "CustomerId", string.Empty, 0));
 
             this.Given(x => x.GivenTheFollowingDictionary(userInput))
                 .And(x => x.GivenTheConfigHeaderExtractorReturns(claimsToThing))
@@ -54,9 +48,9 @@ namespace Ocelot.UnitTests.Configuration
         [Fact]
         public void should_log_error_if_cannot_parse_claim_to_thing()
         {
-            var userInput = new Dictionary<string, string>()
+            var userInput = new Dictionary<string, string>
             {
-                {"CustomerId", "Claims[CustomerId] > value"}
+                {"CustomerId", "Claims[CustomerId] > value"},
             };
 
             var claimsToThing = new ErrorResponse<ClaimToThing>(It.IsAny<Error>());
@@ -72,7 +66,7 @@ namespace Ocelot.UnitTests.Configuration
         private void ThenTheLoggerIsCalledCorrectly()
         {
             _logger
-                .Verify(x => x.LogDebug(It.IsAny<string>()), Times.Once);
+                .Verify(x => x.LogDebug(It.IsAny<string>), Times.Once);
         }
 
         private void ThenClaimsToThingsAreReturned()

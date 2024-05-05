@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ocelot.Infrastructure.Extensions
+﻿namespace Ocelot.Infrastructure.Extensions
 {
     public static class StringExtensions
     {
@@ -11,7 +9,7 @@ namespace Ocelot.Infrastructure.Extensions
                 return null;
             }
 
-            string s = source;
+            var s = source;
             while (s.StartsWith(trim, stringComparison))
             {
                 s = s.Substring(trim.Length);

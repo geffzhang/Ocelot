@@ -1,25 +1,16 @@
-using Moq;
+using Microsoft.AspNetCore.Http;
 using Ocelot.Configuration;
 using Ocelot.Configuration.Builder;
+using Ocelot.Infrastructure.RequestData;
 using Ocelot.LoadBalancer.LoadBalancers;
 using Ocelot.Responses;
 using Ocelot.ServiceDiscovery;
 using Ocelot.ServiceDiscovery.Providers;
-using Shouldly;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Ocelot.Infrastructure.RequestData;
-using Ocelot.Middleware;
 using Ocelot.Values;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.LoadBalancer
 {
-    using System;
-    using Microsoft.AspNetCore.Http;
-
-    public class LoadBalancerFactoryTests
+    public class LoadBalancerFactoryTests : UnitTest
     {
         private DownstreamRoute _route;
         private readonly LoadBalancerFactory _factory;
@@ -62,7 +53,7 @@ namespace Ocelot.UnitTests.LoadBalancer
         public void should_return_matching_load_balancer()
         {
             var route = new DownstreamRouteBuilder()
-                .WithLoadBalancerOptions(new LoadBalancerOptions("FakeLoadBalancerTwo", "", 0))
+                .WithLoadBalancerOptions(new LoadBalancerOptions("FakeLoadBalancerTwo", string.Empty, 0))
                 .WithUpstreamHttpMethod(new List<string> { "Get" })
                 .Build();
 
@@ -78,7 +69,7 @@ namespace Ocelot.UnitTests.LoadBalancer
         public void should_return_error_response_if_cannot_find_load_balancer_creator()
         {
             var route = new DownstreamRouteBuilder()
-                .WithLoadBalancerOptions(new LoadBalancerOptions("DoesntExistLoadBalancer", "", 0))
+                .WithLoadBalancerOptions(new LoadBalancerOptions("DoesntExistLoadBalancer", string.Empty, 0))
                 .WithUpstreamHttpMethod(new List<string> { "Get" })
                 .Build();
 
@@ -95,7 +86,7 @@ namespace Ocelot.UnitTests.LoadBalancer
         public void should_return_error_response_if_creator_errors()
         {
             var route = new DownstreamRouteBuilder()
-                .WithLoadBalancerOptions(new LoadBalancerOptions("BrokenLoadBalancer", "", 0))
+                .WithLoadBalancerOptions(new LoadBalancerOptions("BrokenLoadBalancer", string.Empty, 0))
                 .WithUpstreamHttpMethod(new List<string> { "Get" })
                 .Build();
 
@@ -111,7 +102,7 @@ namespace Ocelot.UnitTests.LoadBalancer
         public void should_call_service_provider()
         {
             var route = new DownstreamRouteBuilder()
-                .WithLoadBalancerOptions(new LoadBalancerOptions("FakeLoadBalancerOne", "", 0))
+                .WithLoadBalancerOptions(new LoadBalancerOptions("FakeLoadBalancerOne", string.Empty, 0))
                 .WithUpstreamHttpMethod(new List<string> { "Get" })
                 .Build();
 
@@ -127,7 +118,7 @@ namespace Ocelot.UnitTests.LoadBalancer
         public void should_return_error_response_when_call_to_service_provider_fails()
         {
             var route = new DownstreamRouteBuilder()
-                .WithLoadBalancerOptions(new LoadBalancerOptions("FakeLoadBalancerOne", "", 0))
+                .WithLoadBalancerOptions(new LoadBalancerOptions("FakeLoadBalancerOne", string.Empty, 0))
                 .WithUpstreamHttpMethod(new List<string> { "Get" })
                 .Build();
 
@@ -192,7 +183,6 @@ namespace Ocelot.UnitTests.LoadBalancer
         private class FakeLoadBalancerCreator<T> : ILoadBalancerCreator
             where T : ILoadBalancer, new()
         {
-
             public FakeLoadBalancerCreator()
             {
                 Type = typeof(T).Name;
@@ -207,7 +197,7 @@ namespace Ocelot.UnitTests.LoadBalancer
             {
                 return new OkResponse<ILoadBalancer>(new T());
             }
-            
+
             public string Type { get; }
         }
 
@@ -231,12 +221,12 @@ namespace Ocelot.UnitTests.LoadBalancer
         {
             public Task<Response<ServiceHostAndPort>> Lease(HttpContext httpContext)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
 
             public void Release(ServiceHostAndPort hostAndPort)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
@@ -244,12 +234,12 @@ namespace Ocelot.UnitTests.LoadBalancer
         {
             public Task<Response<ServiceHostAndPort>> Lease(HttpContext httpContext)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
 
             public void Release(ServiceHostAndPort hostAndPort)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
@@ -257,12 +247,12 @@ namespace Ocelot.UnitTests.LoadBalancer
         {
             public Task<Response<ServiceHostAndPort>> Lease(HttpContext httpContext)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
 
             public void Release(ServiceHostAndPort hostAndPort)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
@@ -270,14 +260,13 @@ namespace Ocelot.UnitTests.LoadBalancer
         {
             public Task<Response<ServiceHostAndPort>> Lease(HttpContext httpContext)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
 
             public void Release(ServiceHostAndPort hostAndPort)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
-
     }
 }

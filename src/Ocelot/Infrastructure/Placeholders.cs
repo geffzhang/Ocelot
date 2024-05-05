@@ -1,14 +1,11 @@
+using Microsoft.AspNetCore.Http;
+using Ocelot.Infrastructure.RequestData;
+using Ocelot.Middleware;
+using Ocelot.Request.Middleware;
+using Ocelot.Responses;
+
 namespace Ocelot.Infrastructure
 {
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.Infrastructure.RequestData;
-    using Ocelot.Middleware;
-    using Ocelot.Request.Middleware;
-    using Ocelot.Responses;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
     public class Placeholders : IPlaceholders
     {
         private readonly Dictionary<string, Func<Response<string>>> _placeholders;
@@ -99,7 +96,7 @@ namespace Ocelot.Infrastructure
             };
         }
 
-        private Func<DownstreamRequest, string> GetDownstreamBaseUrl()
+        private static Func<DownstreamRequest, string> GetDownstreamBaseUrl()
         {
             return x =>
             {

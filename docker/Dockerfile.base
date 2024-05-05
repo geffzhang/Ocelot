@@ -1,9 +1,25 @@
-# this is the dockerfile that create the ocelot build container
-# build with the docker-build.sh file in this folder
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-bionic AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine
 
-RUN apt install gnupg ca-certificates
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-RUN echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-official-stable.list
-RUN apt update
-RUN apt-get -y install mono-devel
+RUN apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib git openssh-client
+
+RUN curl -L --output ./dotnet-install.sh https://dot.net/v1/dotnet-install.sh
+
+RUN chmod u+x ./dotnet-install.sh 
+
+# Install .NET 8 SDK (already included in the base image, but listed for consistency)
+RUN ./dotnet-install.sh -c 8.0 -i /usr/share/dotnet
+
+# Install .NET 7 SDK
+RUN ./dotnet-install.sh -c 7.0 -i /usr/share/dotnet
+
+# Install .NET 6 SDK
+RUN ./dotnet-install.sh -c 6.0 -i /usr/share/dotnet
+
+# Generate and export the development certificate
+RUN dotnet dev-certs https -ep /certs/cert.pem -p '' && \
+    chmod 644 /certs/cert.pem
+
+ENV ASPNETCORE_URLS="https://+;http://+" 
+ENV ASPNETCORE_HTTPS_PORT=443 
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password="" 
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/certs/cert.pem

@@ -1,17 +1,8 @@
-﻿namespace Ocelot.AcceptanceTests
-{
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.Configuration.File;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using System.Net.Http;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Microsoft.AspNetCore.Http;
+using Ocelot.Configuration.File;
 
+namespace Ocelot.AcceptanceTests
+{
     public class HttpDelegatingHandlersTests : IDisposable
     {
         private readonly Steps _steps;
@@ -27,38 +18,38 @@
         [Fact]
         public void should_call_re_route_ordered_specific_handlers()
         {
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         DownstreamPathTemplate = "/",
                         DownstreamScheme = "http",
                         DownstreamHostAndPorts = new List<FileHostAndPort>
                         {
-                            new FileHostAndPort
+                            new()
                             {
                                 Host = "localhost",
                                 Port = port,
-                            }
+                            },
                         },
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "Get" },
                         DelegatingHandlers = new List<string>
                         {
                             "FakeHandlerTwo",
-                            "FakeHandler"
-                        }
-                    }
-                }
+                            "FakeHandler",
+                        },
+                    },
+                },
             };
 
             this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", "/", 200, "Hello from Laura"))
                 .And(x => _steps.GivenThereIsAConfiguration(configuration))
-                .And(x => _steps.GivenOcelotIsRunningWithSpecficHandlersRegisteredInDi<FakeHandler, FakeHandlerTwo>())
+                .And(x => _steps.GivenOcelotIsRunningWithSpecificHandlersRegisteredInDi<FakeHandler, FakeHandlerTwo>())
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
                 .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
@@ -69,28 +60,28 @@
         [Fact]
         public void should_call_global_di_handlers()
         {
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         DownstreamPathTemplate = "/",
                         DownstreamScheme = "http",
                         DownstreamHostAndPorts = new List<FileHostAndPort>
                         {
-                            new FileHostAndPort
+                            new()
                             {
                                 Host = "localhost",
                                 Port = port,
-                            }
+                            },
                         },
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "Get" },
-                    }
-                }
+                    },
+                },
             };
 
             this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", "/", 200, "Hello from Laura"))
@@ -106,28 +97,28 @@
         [Fact]
         public void should_call_global_di_handlers_multiple_times()
         {
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         DownstreamPathTemplate = "/",
                         DownstreamScheme = "http",
                         DownstreamHostAndPorts = new List<FileHostAndPort>
                         {
-                            new FileHostAndPort
+                            new()
                             {
                                 Host = "localhost",
                                 Port = port,
-                            }
+                            },
                         },
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "Get" },
-                    }
-                }
+                    },
+                },
             };
 
             this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", "/", 200, "Hello from Laura"))
@@ -159,28 +150,28 @@
         [Fact]
         public void should_call_global_di_handlers_with_dependency()
         {
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         DownstreamPathTemplate = "/",
                         DownstreamScheme = "http",
                         DownstreamHostAndPorts = new List<FileHostAndPort>
                         {
-                            new FileHostAndPort
+                            new()
                             {
                                 Host = "localhost",
                                 Port = port,
-                            }
+                            },
                         },
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "Get" },
-                    }
-                }
+                    },
+                },
             };
 
             var dependency = new FakeDependency();
@@ -195,17 +186,17 @@
                 .BDDfy();
         }
 
-        private void ThenTheDependencyIsCalled(FakeDependency dependency)
+        private static void ThenTheDependencyIsCalled(FakeDependency dependency)
         {
             dependency.Called.ShouldBeTrue();
         }
 
-        private void ThenTheHandlersAreCalledCorrectly()
+        private static void ThenTheHandlersAreCalledCorrectly()
         {
             FakeHandler.TimeCalled.ShouldBeLessThan(FakeHandlerTwo.TimeCalled);
         }
 
-        private void ThenTheOrderedHandlersAreCalledCorrectly()
+        private static void ThenTheOrderedHandlersAreCalledCorrectly()
         {
             FakeHandlerTwo.TimeCalled.ShouldBeLessThan(FakeHandler.TimeCalled);
         }

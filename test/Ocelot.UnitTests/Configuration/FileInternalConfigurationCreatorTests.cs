@@ -1,29 +1,21 @@
-﻿namespace Ocelot.UnitTests.Configuration
-{
-    using Moq;
-    using Ocelot.Configuration;
-    using Ocelot.Configuration.Builder;
-    using Ocelot.Configuration.Creator;
-    using Ocelot.Configuration.File;
-    using Ocelot.Configuration.Validator;
-    using Ocelot.Errors;
-    using Ocelot.Responses;
-    using Ocelot.UnitTests.Responder;
-    using Shouldly;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Ocelot.Configuration;
+using Ocelot.Configuration.Builder;
+using Ocelot.Configuration.Creator;
+using Ocelot.Configuration.File;
+using Ocelot.Configuration.Validator;
+using Ocelot.Errors;
+using Ocelot.Responses;
+using Ocelot.UnitTests.Responder;
 
-    public class FileInternalConfigurationCreatorTests
+namespace Ocelot.UnitTests.Configuration
+{
+    public class FileInternalConfigurationCreatorTests : UnitTest
     {
         private readonly Mock<IConfigurationValidator> _validator;
         private readonly Mock<IRoutesCreator> _routesCreator;
         private readonly Mock<IAggregatesCreator> _aggregatesCreator;
         private readonly Mock<IDynamicsCreator> _dynamicsCreator;
         private readonly Mock<IConfigurationCreator> _configCreator;
-        private Response<IInternalConfiguration> _config;
         private FileConfiguration _fileConfiguration;
         private readonly FileInternalConfigurationCreator _creator;
         private Response<IInternalConfiguration> _result;
@@ -87,7 +79,7 @@
             _routes = new List<Route> { new RouteBuilder().Build() };
             _aggregates = new List<Route> { new RouteBuilder().Build() };
             _dynamics = new List<Route> { new RouteBuilder().Build() };
-            _internalConfig = new InternalConfiguration(null, "", null, "", null, "", null, null, null);
+            _internalConfig = new InternalConfiguration(null, string.Empty, null, string.Empty, null, string.Empty, null, null, null);
 
             _routesCreator.Setup(x => x.Create(It.IsAny<FileConfiguration>())).Returns(_routes);
             _aggregatesCreator.Setup(x => x.Create(It.IsAny<FileConfiguration>(), It.IsAny<List<Route>>())).Returns(_aggregates);

@@ -1,12 +1,8 @@
-﻿namespace Ocelot.UnitTests.Configuration
-{
-    using System;
-    using Ocelot.Configuration.Creator;
-    using Shouldly;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Ocelot.Configuration.Creator;
 
-    public class VersionCreatorTests
+namespace Ocelot.UnitTests.Configuration
+{
+    public class VersionCreatorTests : UnitTest
     {
         private readonly HttpVersionCreator _creator;
         private string _input;
@@ -29,7 +25,7 @@
         [Fact]
         public void should_default_to_version_one_point_one()
         {
-            this.Given(_ => GivenTheInput(""))
+            this.Given(_ => GivenTheInput(string.Empty))
                 .When(_ => WhenICreate())
                 .Then(_ => ThenTheResultIs(1, 1))
                 .BDDfy();

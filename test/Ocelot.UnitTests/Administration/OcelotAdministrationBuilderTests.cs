@@ -1,20 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Ocelot.Administration;
+using Ocelot.DependencyInjection;
+using System.Reflection;
+
 namespace Ocelot.UnitTests.Administration
 {
-    using IdentityServer4.AccessTokenValidation;
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using Ocelot.Administration;
-    using Ocelot.DependencyInjection;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
-    using TestStack.BDDfy;
-    using Xunit;
-
-    public class OcelotAdministrationBuilderTests
+    public class OcelotAdministrationBuilderTests : UnitTest
     {
         private readonly IServiceCollection _services;
         private IServiceProvider _serviceProvider;
@@ -26,11 +20,11 @@ namespace Ocelot.UnitTests.Administration
         {
             _configRoot = new ConfigurationRoot(new List<IConfigurationProvider>());
             _services = new ServiceCollection();
-            _services.AddSingleton<IWebHostEnvironment>(GetHostingEnvironment());
+            _services.AddSingleton(GetHostingEnvironment());
             _services.AddSingleton(_configRoot);
         }
-        
-        private IWebHostEnvironment GetHostingEnvironment()
+
+        private static IWebHostEnvironment GetHostingEnvironment()
         {
             var environment = new Mock<IWebHostEnvironment>();
             environment
@@ -44,7 +38,7 @@ namespace Ocelot.UnitTests.Administration
         [Fact]
         public void should_set_up_administration_with_identity_server_options()
         {
-            Action<IdentityServerAuthenticationOptions> options = o => { };
+            Action<JwtBearerOptions> options = o => { };
 
             this.Given(x => WhenISetUpOcelotServices())
                 .When(x => WhenISetUpAdministration(options))
@@ -69,7 +63,7 @@ namespace Ocelot.UnitTests.Administration
             _ocelotBuilder.AddAdministration("/administration", "secret");
         }
 
-        private void WhenISetUpAdministration(Action<IdentityServerAuthenticationOptions> options)
+        private void WhenISetUpAdministration(Action<JwtBearerOptions> options)
         {
             _ocelotBuilder.AddAdministration("/administration", options);
         }

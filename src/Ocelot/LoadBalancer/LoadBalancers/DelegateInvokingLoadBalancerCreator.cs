@@ -1,10 +1,9 @@
-﻿namespace Ocelot.LoadBalancer.LoadBalancers
-{
-    using System;
-    using Ocelot.Configuration;
-    using Ocelot.ServiceDiscovery.Providers;
-    using Ocelot.Responses;
+﻿using Ocelot.Configuration;
+using Ocelot.Responses;
+using Ocelot.ServiceDiscovery.Providers;
 
+namespace Ocelot.LoadBalancer.LoadBalancers
+{
     public class DelegateInvokingLoadBalancerCreator<T> : ILoadBalancerCreator
         where T : ILoadBalancer
     {
@@ -21,7 +20,6 @@
             try
             {
                 return new OkResponse<ILoadBalancer>(_creatorFunc(route, serviceProvider));
-
             }
             catch (Exception e)
             {

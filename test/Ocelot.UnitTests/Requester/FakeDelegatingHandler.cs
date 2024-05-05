@@ -1,8 +1,3 @@
-using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Ocelot.UnitTests.Requester
 {
     public class FakeDelegatingHandler : DelegatingHandler
@@ -17,7 +12,7 @@ namespace Ocelot.UnitTests.Requester
             Order = order;
         }
 
-        public int Order { get; private set; }
+        public int Order { get; }
 
         public DateTime TimeCalled { get; private set; }
 
@@ -35,7 +30,7 @@ namespace Ocelot.UnitTests.Requester
             Order = 3;
         }
 
-        public int Order { get; private set; }
+        public int Order { get; }
 
         public DateTime TimeCalled { get; private set; }
 
@@ -53,7 +48,7 @@ namespace Ocelot.UnitTests.Requester
             Order = 4;
         }
 
-        public int Order { get; private set; }
+        public int Order { get; }
 
         public DateTime TimeCalled { get; private set; }
 
@@ -71,7 +66,7 @@ namespace Ocelot.UnitTests.Requester
             Order = 2;
         }
 
-        public int Order { get; private set; }
+        public int Order { get; }
 
         public DateTime TimeCalled { get; private set; }
 

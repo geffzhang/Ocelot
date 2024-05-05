@@ -1,15 +1,10 @@
-﻿namespace Ocelot.AcceptanceTests
-{
-    using Configuration.File;
-    using Consul;
-    using Microsoft.AspNetCore.Http;
-    using Newtonsoft.Json;
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Consul;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using Ocelot.Configuration.File;
 
+namespace Ocelot.AcceptanceTests
+{
     public class TwoDownstreamServicesTests : IDisposable
     {
         private readonly Steps _steps;
@@ -28,9 +23,9 @@
         [Fact]
         public void should_fix_issue_194()
         {
-            var consulPort = RandomPortFinder.GetRandomPort();
-            var servicePort1 = RandomPortFinder.GetRandomPort();
-            var servicePort2 = RandomPortFinder.GetRandomPort();
+            var consulPort = PortFinder.GetRandomPort();
+            var servicePort1 = PortFinder.GetRandomPort();
+            var servicePort2 = PortFinder.GetRandomPort();
             var downstreamServiceOneUrl = $"http://localhost:{servicePort1}";
             var downstreamServiceTwoUrl = $"http://localhost:{servicePort2}";
             var fakeConsulServiceDiscoveryUrl = $"http://localhost:{consulPort}";
@@ -39,46 +34,46 @@
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/api/user/{user}",
                             DownstreamScheme = "http",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = servicePort1,
-                                }
+                                },
                             },
                             UpstreamPathTemplate = "/api/user/{user}",
                             UpstreamHttpMethod = new List<string> { "Get" },
                         },
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/api/product/{product}",
                             DownstreamScheme = "http",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = servicePort2,
-                                }
+                                },
                             },
                             UpstreamPathTemplate = "/api/product/{product}",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
+                        },
                     },
-                GlobalConfiguration = new FileGlobalConfiguration()
+                GlobalConfiguration = new FileGlobalConfiguration
                 {
-                    ServiceDiscoveryProvider = new FileServiceDiscoveryProvider()
+                    ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
                     {
                         Scheme = "https",
                         Host = "localhost",
-                        Port = consulPort
-                    }
-                }
+                        Port = consulPort,
+                    },
+                },
             };
 
             this.Given(x => x.GivenProductServiceOneIsRunning(downstreamServiceOneUrl, "/api/user/info", 200, "user"))
@@ -102,7 +97,7 @@
                 if (context.Request.Path.Value == "/v1/health/service/product")
                 {
                     var json = JsonConvert.SerializeObject(_serviceEntries);
-                    context.Response.Headers.Add("Content-Type", "application/json");
+                    context.Response.Headers.Append("Content-Type", "application/json");
                     await context.Response.WriteAsync(json);
                 }
             });

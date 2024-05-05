@@ -1,27 +1,17 @@
-using Xunit;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Ocelot.Configuration.File;
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
+using System.Net;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Ocelot.IntegrationTests
 {
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Configuration;
-    using Newtonsoft.Json;
-    using Ocelot.Configuration.File;
-    using Ocelot.DependencyInjection;
-    using Ocelot.Middleware;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Threading.Tasks;
-    using TestStack.BDDfy;
-
     public class HeaderTests : IDisposable
     {
         private readonly HttpClient _httpClient;
@@ -34,44 +24,46 @@ namespace Ocelot.IntegrationTests
         public HeaderTests()
         {
             _httpClient = new HttpClient();
-            _ocelotBaseUrl = "http://localhost:5010";
+            var port = PortFinder.GetRandomPort();
+            _ocelotBaseUrl = $"http://localhost:{port}";
             _httpClient.BaseAddress = new Uri(_ocelotBaseUrl);
         }
 
         [Fact]
-        public void should_pass_remote_ip_address_if_as_x_forwarded_for_header()
+        public void Should_pass_remote_ip_address_if_as_x_forwarded_for_header()
         {
+            var port = PortFinder.GetRandomPort();
             var configuration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                 {
-                    new FileRoute
+                    new()
                     {
                         DownstreamPathTemplate = "/",
                         DownstreamScheme = "http",
                         DownstreamHostAndPorts = new List<FileHostAndPort>
                         {
-                            new FileHostAndPort
+                            new()
                             {
                                 Host = "localhost",
-                                Port = 6773,
-                            }
+                                Port = port,
+                            },
                         },
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "Get" },
                         UpstreamHeaderTransform = new Dictionary<string,string>
                         {
-                            {"X-Forwarded-For", "{RemoteIpAddress}"}
+                            {"X-Forwarded-For", "{RemoteIpAddress}"},
                         },
                         HttpHandlerOptions = new FileHttpHandlerOptions
                         {
-                            AllowAutoRedirect = false
-                        }
-                    }
-                }
+                            AllowAutoRedirect = false,
+                        },
+                    },
+                },
             };
 
-            this.Given(x => GivenThereIsAServiceRunningOn("http://localhost:6773", 200, "X-Forwarded-For"))
+            this.Given(x => GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, "X-Forwarded-For"))
                 .And(x => GivenThereIsAConfiguration(configuration))
                 .And(x => GivenOcelotIsRunning())
                 .When(x => WhenIGetUrlOnTheApiGateway("/"))
@@ -134,7 +126,7 @@ namespace Ocelot.IntegrationTests
             _builder.Start();
         }
 
-        private void GivenThereIsAConfiguration(FileConfiguration fileConfiguration)
+        private static void GivenThereIsAConfiguration(FileConfiguration fileConfiguration)
         {
             var configurationPath = $"{Directory.GetCurrentDirectory()}/ocelot.json";
 
@@ -147,7 +139,7 @@ namespace Ocelot.IntegrationTests
 
             File.WriteAllText(configurationPath, jsonConfiguration);
 
-            var text = File.ReadAllText(configurationPath);
+            _ = File.ReadAllText(configurationPath);
 
             configurationPath = $"{AppContext.BaseDirectory}/ocelot.json";
 
@@ -158,7 +150,7 @@ namespace Ocelot.IntegrationTests
 
             File.WriteAllText(configurationPath, jsonConfiguration);
 
-            text = File.ReadAllText(configurationPath);
+            _ = File.ReadAllText(configurationPath);
         }
 
         private async Task WhenIGetUrlOnTheApiGateway(string url)
@@ -179,12 +171,7 @@ namespace Ocelot.IntegrationTests
 
             var header = _response.Content.ReadAsStringAsync().Result;
 
-            bool passed = false;
-
-            if (header == windowsOrMac || header == linux)
-            {
-                passed = true;
-            }
+            var passed = header == windowsOrMac || header == linux;
 
             passed.ShouldBeTrue();
         }
@@ -194,6 +181,7 @@ namespace Ocelot.IntegrationTests
             _builder?.Dispose();
             _httpClient?.Dispose();
             _downstreamBuilder?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

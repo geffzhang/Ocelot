@@ -1,4 +1,3 @@
-using Moq;
 using Ocelot.Configuration;
 using Ocelot.Configuration.Creator;
 using Ocelot.Configuration.File;
@@ -6,21 +5,17 @@ using Ocelot.Infrastructure;
 using Ocelot.Logging;
 using Ocelot.Responses;
 using Ocelot.UnitTests.Responder;
-using Shouldly;
-using System.Collections.Generic;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration
 {
-    public class HeaderFindAndReplaceCreatorTests
+    public class HeaderFindAndReplaceCreatorTests : UnitTest
     {
-        private HeaderFindAndReplaceCreator _creator;
+        private readonly HeaderFindAndReplaceCreator _creator;
         private FileRoute _route;
         private HeaderTransformations _result;
-        private Mock<IPlaceholders> _placeholders;
-        private Mock<IOcelotLoggerFactory> _factory;
-        private Mock<IOcelotLogger> _logger;
+        private readonly Mock<IPlaceholders> _placeholders;
+        private readonly Mock<IOcelotLoggerFactory> _factory;
+        private readonly Mock<IOcelotLogger> _logger;
 
         public HeaderFindAndReplaceCreatorTests()
         {
@@ -39,25 +34,25 @@ namespace Ocelot.UnitTests.Configuration
                 UpstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"Test", "Test, Chicken"},
-                    {"Moop", "o, a"}
+                    {"Moop", "o, a"},
                 },
                 DownstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"Pop", "West, East"},
-                    {"Bop", "e, r"}
-                }
+                    {"Bop", "e, r"},
+                },
             };
 
             var upstream = new List<HeaderFindAndReplace>
             {
-                new HeaderFindAndReplace("Test", "Test", "Chicken", 0),
-                new HeaderFindAndReplace("Moop", "o", "a", 0)
+                new("Test", "Test", "Chicken", 0),
+                new("Moop", "o", "a", 0),
             };
 
             var downstream = new List<HeaderFindAndReplace>
             {
-                new HeaderFindAndReplace("Pop", "West", "East", 0),
-                new HeaderFindAndReplace("Bop", "e", "r", 0)
+                new("Pop", "West", "East", 0),
+                new("Bop", "e", "r", 0),
             };
 
             this.Given(x => GivenTheRoute(route))
@@ -78,7 +73,7 @@ namespace Ocelot.UnitTests.Configuration
                 UpstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {key, value},
-                }
+                },
             };
 
             var expected = new AddHeader(key, value);
@@ -97,16 +92,16 @@ namespace Ocelot.UnitTests.Configuration
                 DownstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"Location", "http://www.bbc.co.uk/, {BaseUrl}"},
-                }
+                },
             };
 
             var downstream = new List<HeaderFindAndReplace>
             {
-                new HeaderFindAndReplace("Location", "http://www.bbc.co.uk/", "http://ocelot.com/", 0),
+                new("Location", "http://www.bbc.co.uk/", "http://ocelot.com/", 0),
             };
 
             this.Given(x => GivenTheRoute(route))
-                .And(x => GivenTheBaseUrlIs("http://ocelot.com/"))
+                .And(x => GivenThePlaceholderIs("http://ocelot.com/"))
                 .When(x => WhenICreate())
                 .Then(x => ThenTheFollowingDownstreamIsReturned(downstream))
                 .BDDfy();
@@ -124,12 +119,10 @@ namespace Ocelot.UnitTests.Configuration
                 UpstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"Location", "http://www.bbc.co.uk/, {BaseUrl}"},
-                }
+                },
             };
 
-            var expected = new List<HeaderFindAndReplace>
-            {
-            };
+            var expected = new List<HeaderFindAndReplace>();
 
             this.Given(x => GivenTheRoute(route))
                 .And(x => GivenTheBaseUrlErrors())
@@ -143,7 +136,7 @@ namespace Ocelot.UnitTests.Configuration
 
         private void ThenTheLoggerIsCalledCorrectly(string message)
         {
-            _logger.Verify(x => x.LogWarning(message), Times.Once);
+            _logger.Verify(x => x.LogWarning(It.Is<Func<string>>(y => y.Invoke() == message)), Times.Once);
         }
 
         [Fact]
@@ -154,18 +147,41 @@ namespace Ocelot.UnitTests.Configuration
                 DownstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"Location", "http://www.bbc.co.uk/pay, {BaseUrl}pay"},
-                }
+                },
             };
 
             var downstream = new List<HeaderFindAndReplace>
             {
-                new HeaderFindAndReplace("Location", "http://www.bbc.co.uk/pay", "http://ocelot.com/pay", 0),
+                new("Location", "http://www.bbc.co.uk/pay", "http://ocelot.com/pay", 0),
             };
 
             this.Given(x => GivenTheRoute(route))
-                .And(x => GivenTheBaseUrlIs("http://ocelot.com/"))
+                .And(x => GivenThePlaceholderIs("http://ocelot.com/"))
                 .When(x => WhenICreate())
                 .Then(x => ThenTheFollowingDownstreamIsReturned(downstream))
+                .BDDfy();
+        }
+
+        [Fact]
+        public void should_map_with_partial_placeholder_in_the_middle()
+        {
+            var route = new FileRoute
+            {
+                DownstreamHeaderTransform = new Dictionary<string, string>
+                {
+                    {"Host-Next", "www.bbc.co.uk, subdomain.{Host}/path"},
+                },
+            };
+
+            var expected = new List<HeaderFindAndReplace>
+            {
+                new("Host-Next", "www.bbc.co.uk", "subdomain.ocelot.next/path", 0),
+            };
+
+            this.Given(x => GivenTheRoute(route))
+                .And(x => GivenThePlaceholderIs("ocelot.next"))
+                .When(x => WhenICreate())
+                .Then(x => ThenTheFollowingDownstreamIsReturned(expected))
                 .BDDfy();
         }
 
@@ -177,13 +193,13 @@ namespace Ocelot.UnitTests.Configuration
                 DownstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"Trace-Id", "{TraceId}"},
-                }
+                },
             };
 
             var expected = new AddHeader("Trace-Id", "{TraceId}");
 
             this.Given(x => GivenTheRoute(route))
-                .And(x => GivenTheBaseUrlIs("http://ocelot.com/"))
+                .And(x => GivenThePlaceholderIs("http://ocelot.com/"))
                 .When(x => WhenICreate())
                 .Then(x => ThenTheFollowingAddHeaderToDownstreamIsReturned(expected))
                 .BDDfy();
@@ -197,7 +213,7 @@ namespace Ocelot.UnitTests.Configuration
                 DownstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"X-Custom-Header", "Value"},
-                }
+                },
             };
 
             var expected = new AddHeader("X-Custom-Header", "Value");
@@ -216,7 +232,7 @@ namespace Ocelot.UnitTests.Configuration
                 UpstreamHeaderTransform = new Dictionary<string, string>
                 {
                     {"X-Custom-Header", "Value"},
-                }
+                },
             };
 
             var expected = new AddHeader("X-Custom-Header", "Value");
@@ -227,9 +243,9 @@ namespace Ocelot.UnitTests.Configuration
                 .BDDfy();
         }
 
-        private void GivenTheBaseUrlIs(string baseUrl)
+        private void GivenThePlaceholderIs(string placeholderValue)
         {
-            _placeholders.Setup(x => x.Get(It.IsAny<string>())).Returns(new OkResponse<string>(baseUrl));
+            _placeholders.Setup(x => x.Get(It.IsAny<string>())).Returns(new OkResponse<string>(placeholderValue));
         }
 
         private void GivenTheBaseUrlErrors()
@@ -253,7 +269,7 @@ namespace Ocelot.UnitTests.Configuration
         {
             _result.Downstream.Count.ShouldBe(downstream.Count);
 
-            for (int i = 0; i < _result.Downstream.Count; i++)
+            for (var i = 0; i < _result.Downstream.Count; i++)
             {
                 var result = _result.Downstream[i];
                 var expected = downstream[i];
@@ -278,7 +294,7 @@ namespace Ocelot.UnitTests.Configuration
         {
             _result.Upstream.Count.ShouldBe(expecteds.Count);
 
-            for (int i = 0; i < _result.Upstream.Count; i++)
+            for (var i = 0; i < _result.Upstream.Count; i++)
             {
                 var result = _result.Upstream[i];
                 var expected = expecteds[i];

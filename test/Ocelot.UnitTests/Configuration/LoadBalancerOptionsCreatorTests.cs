@@ -1,13 +1,10 @@
+using Ocelot.Configuration;
+using Ocelot.Configuration.Creator;
+using Ocelot.Configuration.File;
+
 namespace Ocelot.UnitTests.Configuration
 {
-    using Ocelot.Configuration;
-    using Ocelot.Configuration.Creator;
-    using Ocelot.Configuration.File;
-    using Shouldly;
-    using TestStack.BDDfy;
-    using Xunit;
-
-    public class LoadBalancerOptionsCreatorTests
+    public class LoadBalancerOptionsCreatorTests : UnitTest
     {
         private readonly ILoadBalancerOptionsCreator _creator;
         private FileLoadBalancerOptions _fileLoadBalancerOptions;
@@ -25,7 +22,7 @@ namespace Ocelot.UnitTests.Configuration
             {
                 Type = "test",
                 Key = "west",
-                Expiry = 1
+                Expiry = 1,
             };
 
             this.Given(_ => GivenThe(fileLoadBalancerOptions))

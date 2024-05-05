@@ -1,8 +1,8 @@
+using FluentValidation;
+using Ocelot.Configuration.File;
+
 namespace Ocelot.Configuration.Validator
 {
-    using File;
-    using FluentValidation;
-
     public class FileGlobalConfigurationFluentValidator : AbstractValidator<FileGlobalConfiguration>
     {
         public FileGlobalConfigurationFluentValidator(FileQoSOptionsFluentValidator fileQoSOptionsFluentValidator)

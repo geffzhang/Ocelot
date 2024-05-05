@@ -1,11 +1,9 @@
+using Ocelot.Configuration.File;
+using Ocelot.Configuration.Validator;
+using Ocelot.Responses;
+
 namespace Ocelot.Configuration.Creator
 {
-    using File;
-    using Responses;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Validator;
-
     public class FileInternalConfigurationCreator : IInternalConfigurationCreator
     {
         private readonly IConfigurationValidator _configurationValidator;

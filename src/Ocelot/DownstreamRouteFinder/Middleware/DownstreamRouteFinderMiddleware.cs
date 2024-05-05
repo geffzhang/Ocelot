@@ -1,13 +1,11 @@
+using Microsoft.AspNetCore.Http;
+using Ocelot.DownstreamRouteFinder.Finder;
+using Ocelot.Infrastructure.Extensions;
+using Ocelot.Logging;
+using Ocelot.Middleware;
+
 namespace Ocelot.DownstreamRouteFinder.Middleware
 {
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.DownstreamRouteFinder.Finder;
-    using Ocelot.Infrastructure.Extensions;
-    using Ocelot.Logging;
-    using Ocelot.Middleware;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     public class DownstreamRouteFinderMiddleware : OcelotMiddleware
     {
         private readonly RequestDelegate _next;
@@ -29,9 +27,12 @@ namespace Ocelot.DownstreamRouteFinder.Middleware
 
             var upstreamQueryString = httpContext.Request.QueryString.ToString();
 
-            var upstreamHost = httpContext.Request.Headers["Host"];
+            var hostHeader = httpContext.Request.Headers["Host"].ToString();
+            var upstreamHost = hostHeader.Contains(':')
+                ? hostHeader.Split(':')[0]
+                : hostHeader;
 
-            Logger.LogDebug($"Upstream url path is {upstreamUrlPath}");
+            Logger.LogDebug(() => $"Upstream url path is {upstreamUrlPath}");
 
             var internalConfiguration = httpContext.Items.IInternalConfiguration();
 
@@ -41,14 +42,13 @@ namespace Ocelot.DownstreamRouteFinder.Middleware
 
             if (response.IsError)
             {
-                Logger.LogWarning($"{MiddlewareName} setting pipeline errors. IDownstreamRouteFinder returned {response.Errors.ToErrorString()}");
+                Logger.LogWarning(() => $"{MiddlewareName} setting pipeline errors. IDownstreamRouteFinder returned {response.Errors.ToErrorString()}");
 
                 httpContext.Items.UpsertErrors(response.Errors);
                 return;
             }
 
-            var downstreamPathTemplates = string.Join(", ", response.Data.Route.DownstreamRoute.Select(r => r.DownstreamPathTemplate.Value));
-            Logger.LogDebug($"downstream templates are {downstreamPathTemplates}");
+            Logger.LogDebug(() => $"downstream templates are {string.Join(", ", response.Data.Route.DownstreamRoute.Select(r => r.DownstreamPathTemplate.Value))}");
 
             // why set both of these on HttpContext
             httpContext.Items.UpsertTemplatePlaceholderNameAndValues(response.Data.TemplatePlaceholderNameAndValues);

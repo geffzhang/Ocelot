@@ -1,307 +1,286 @@
-﻿namespace Ocelot.UnitTests.DependencyInjection
-{
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Moq;
-    using Newtonsoft.Json;
-    using Ocelot.Configuration.File;
-    using Ocelot.DependencyInjection;
-    using Shouldly;
-    using System.Collections.Generic;
-    using System.IO;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Newtonsoft.Json;
+using Ocelot.Configuration.File;
+using Ocelot.DependencyInjection;
+using System.Runtime.CompilerServices;
 
-    public class ConfigurationBuilderExtensionsTests
+namespace Ocelot.UnitTests.DependencyInjection
+{
+    public sealed class ConfigurationBuilderExtensionsTests : FileUnitTest
     {
         private IConfigurationRoot _configuration;
-        private string _result;
         private IConfigurationRoot _configRoot;
         private FileConfiguration _globalConfig;
         private FileConfiguration _routeA;
         private FileConfiguration _routeB;
         private FileConfiguration _aggregate;
         private FileConfiguration _envSpecific;
-        private Mock<IWebHostEnvironment> _hostingEnvironment;
+        private FileConfiguration _combinedFileConfiguration;
+        private readonly Mock<IWebHostEnvironment> _hostingEnvironment;
 
         public ConfigurationBuilderExtensionsTests()
         {
             _hostingEnvironment = new Mock<IWebHostEnvironment>();
-            // Clean up config files before each test
-            var subConfigFiles = new DirectoryInfo(".").GetFiles("ocelot.*.json");
+        }
 
-            foreach (var config in subConfigFiles)
+        protected override string EnvironmentName()
+            => _hostingEnvironment?.Object?.EnvironmentName ?? base.EnvironmentName();
+
+        [Fact]
+        public void Should_add_base_url_to_config()
+        {
+            // Arrange
+            _configuration = new ConfigurationBuilder()
+                .AddOcelotBaseUrl("test")
+                .Build();
+
+            // Act
+            var actual = _configuration.GetValue("BaseUrl", string.Empty);
+
+            // Assert
+            actual.ShouldBe("test");
+        }
+
+        [Fact]
+        [Trait("PR", "1227")]
+        [Trait("Issue", "1216")]
+        public void Should_merge_files_to_file()
+        {
+            // Arrange
+            GivenTheEnvironmentIs(TestID);
+            GivenMultipleConfigurationFiles(TestID);
+
+            // Act
+            WhenIAddOcelotConfiguration(TestID);
+
+            // Assert
+            ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(false);
+            TheOcelotPrimaryConfigFileExists(true);
+        }
+
+        [Fact]
+        public void Should_store_given_configurations_when_provided_file_configuration_object()
+        {
+            // Arrange
+            GivenTheEnvironmentIs(TestID);
+            GivenCombinedFileConfigurationObject();
+
+            // Act
+            WhenIAddOcelotConfigurationWithCombinedFileConfiguration();
+
+            // Assert
+            ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(true);
+        }
+
+        [Fact]
+        public void Should_merge_files_except_env()
+        {
+            // Arrange
+            GivenTheEnvironmentIs(TestID);
+            GivenMultipleConfigurationFiles(TestID, true);
+
+            // Act
+            WhenIAddOcelotConfiguration(TestID);
+
+            // Assert
+            ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(false);
+            NotContainsEnvSpecificConfig();
+        }
+
+        [Fact]
+        public void Should_merge_files_in_specific_folder()
+        {
+            // Arrange
+            GivenMultipleConfigurationFiles(TestID);
+
+            // Act
+            WhenIAddOcelotConfiguration(TestID);
+
+            // Assert
+            ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(false);
+        }
+
+        [Fact]
+        [Trait("PR", "1227")]
+        [Trait("Issue", "1216")]
+        public void Should_merge_files_to_memory()
+        {
+            // Arrange
+            GivenTheEnvironmentIs(TestID);
+            GivenMultipleConfigurationFiles(TestID);
+
+            // Act
+            WhenIAddOcelotConfiguration(TestID, MergeOcelotJson.ToMemory);
+
+            // Assert
+            ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(false);
+            TheOcelotPrimaryConfigFileExists(false);
+        }
+
+        [Fact]
+        [Trait("PR", "1986")]
+        [Trait("Issue", "1518")]
+        public void Should_merge_files_with_null_environment()
+        {
+            // Arrange
+            _environmentConfigFileName = null; // Ups!
+            const IWebHostEnvironment NullEnvironment = null; // Wow!
+            GivenMultipleConfigurationFiles(TestID, false);
+
+            // Act
+            _configRoot = new ConfigurationBuilder()
+                .AddOcelot(TestID, NullEnvironment, MergeOcelotJson.ToMemory, _primaryConfigFileName, _globalConfigFileName, _environmentConfigFileName, false, false)
+                .Build();
+
+            // Assert
+            ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(false);
+            TheOcelotPrimaryConfigFileExists(false);
+        }
+
+        private void GivenCombinedFileConfigurationObject()
+        {
+            _combinedFileConfiguration = new FileConfiguration
             {
-                config.Delete();
+                GlobalConfiguration = GetFileGlobalConfigurationData(),
+                Routes = GetServiceARoutes().Concat(GetServiceBRoutes()).Concat(GetEnvironmentSpecificRoutes()).ToList(),
+                Aggregates = GetFileAggregatesRouteData(),
+            };
+        }
+
+        private void GivenMultipleConfigurationFiles(string folder, bool withEnvironment = false)
+        {
+            _globalConfig = new() { GlobalConfiguration = GetFileGlobalConfigurationData() };
+            _routeA = new() { Routes = GetServiceARoutes() };
+            _routeB = new() { Routes = GetServiceBRoutes() };
+            _aggregate = new() { Aggregates = GetFileAggregatesRouteData() };
+            _envSpecific = new() { Routes = GetEnvironmentSpecificRoutes() };
+
+            var configParts = new Dictionary<string, FileConfiguration>
+            {
+                { "global", _globalConfig },
+                { "routesA", _routeA },
+                { "routesB", _routeB },
+                { "aggregates", _aggregate },
+            };
+
+            if (withEnvironment)
+            {
+                configParts.Add(EnvironmentName(), _envSpecific);
+            }
+
+            foreach (var part in configParts)
+            {
+                var filename = Path.Combine(folder, string.Format(ConfigurationBuilderExtensions.EnvironmentConfigFile, part.Key));
+                File.WriteAllText(filename, JsonConvert.SerializeObject(part.Value, Formatting.Indented));
+                _files.Add(filename);
             }
         }
 
-        [Fact]
-        public void should_add_base_url_to_config()
+        private static FileGlobalConfiguration GetFileGlobalConfigurationData() => new()
         {
-            this.Given(_ => GivenTheBaseUrl("test"))
-                .When(_ => WhenIGet("BaseUrl"))
-                .Then(_ => ThenTheResultIs("test"))
-                .BDDfy();
-        }
-
-        [Fact]
-        public void should_merge_files()
-        {
-            this.Given(_ => GivenMultipleConfigurationFiles("", false))
-                .And(_ => GivenTheEnvironmentIs(null))
-                .When(_ => WhenIAddOcelotConfiguration())
-                .Then(_ => ThenTheConfigsAreMerged())
-                .BDDfy();
-        }
-
-        [Fact]
-        public void should_merge_files_except_env()
-        {
-            this.Given(_ => GivenMultipleConfigurationFiles("", true))
-                .And(_ => GivenTheEnvironmentIs("Env"))
-                .When(_ => WhenIAddOcelotConfiguration())
-                .Then(_ => ThenTheConfigsAreMerged())
-                .And(_ => NotContainsEnvSpecificConfig())
-                .BDDfy();
-        }
-
-        [Fact]
-        public void should_merge_files_in_specific_folder()
-        {
-            string configFolder = "ConfigFiles";
-            this.Given(_ => GivenMultipleConfigurationFiles(configFolder, false))
-                .When(_ => WhenIAddOcelotConfigurationWithSpecificFolder(configFolder))
-                .Then(_ => ThenTheConfigsAreMerged())
-                .BDDfy();
-        }
-
-        private void GivenMultipleConfigurationFiles(string folder, bool addEnvSpecificConfig)
-        {
-            if (!string.IsNullOrEmpty(folder))
+            BaseUrl = "BaseUrl",
+            RateLimitOptions = new()
             {
-                Directory.CreateDirectory(folder);
-            }
-
-            _globalConfig = new FileConfiguration
+                HttpStatusCode = 500,
+                ClientIdHeader = "ClientIdHeader",
+                DisableRateLimitHeaders = true,
+                QuotaExceededMessage = "QuotaExceededMessage",
+                RateLimitCounterPrefix = "RateLimitCounterPrefix",
+            },
+            ServiceDiscoveryProvider = new()
             {
-                GlobalConfiguration = new FileGlobalConfiguration
-                {
-                    BaseUrl = "BaseUrl",
-                    RateLimitOptions = new FileRateLimitOptions
-                    {
-                        HttpStatusCode = 500,
-                        ClientIdHeader = "ClientIdHeader",
-                        DisableRateLimitHeaders = true,
-                        QuotaExceededMessage = "QuotaExceededMessage",
-                        RateLimitCounterPrefix = "RateLimitCounterPrefix"
-                    },
-                    ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
-                    {
-                        Scheme = "https",
-                        Host = "Host",
-                        Port = 80,
-                        Type = "Type"
-                    },
-                    RequestIdKey = "RequestIdKey"
-                }
-            };
+                Scheme = "https",
+                Host = "Host",
+                Port = 80,
+                Type = "Type",
+            },
+            RequestIdKey = "RequestIdKey",
+        };
 
-            _routeA = new FileConfiguration
-            {
-                Routes = new List<FileRoute>
-                {
-                    new FileRoute
-                    {
-                        DownstreamScheme = "DownstreamScheme",
-                        DownstreamPathTemplate = "DownstreamPathTemplate",
-                        Key = "Key",
-                        UpstreamHost = "UpstreamHost",
-                        UpstreamHttpMethod = new List<string>
-                        {
-                            "UpstreamHttpMethod"
-                        },
-                        DownstreamHostAndPorts = new List<FileHostAndPort>
-                        {
-                            new FileHostAndPort
-                            {
-                                Host = "Host",
-                                Port = 80
-                            }
-                        }
-                    }
-                }
-            };
-
-            _routeB = new FileConfiguration
-            {
-                Routes = new List<FileRoute>
-                {
-                    new FileRoute
-                    {
-                        DownstreamScheme = "DownstreamSchemeB",
-                        DownstreamPathTemplate = "DownstreamPathTemplateB",
-                        Key = "KeyB",
-                        UpstreamHost = "UpstreamHostB",
-                        UpstreamHttpMethod = new List<string>
-                        {
-                            "UpstreamHttpMethodB"
-                        },
-                        DownstreamHostAndPorts = new List<FileHostAndPort>
-                        {
-                            new FileHostAndPort
-                            {
-                                Host = "HostB",
-                                Port = 80
-                            }
-                        }
-                    },
-                    new FileRoute
-                    {
-                        DownstreamScheme = "DownstreamSchemeBB",
-                        DownstreamPathTemplate = "DownstreamPathTemplateBB",
-                        Key = "KeyBB",
-                        UpstreamHost = "UpstreamHostBB",
-                        UpstreamHttpMethod = new List<string>
-                        {
-                            "UpstreamHttpMethodBB"
-                        },
-                        DownstreamHostAndPorts = new List<FileHostAndPort>
-                        {
-                            new FileHostAndPort
-                            {
-                                Host = "HostBB",
-                                Port = 80
-                            }
-                        }
-                    }
-                }
-            };
-
-            _aggregate = new FileConfiguration
-            {
-                Aggregates = new List<FileAggregateRoute>
-                {
-                    new FileAggregateRoute
-                    {
-                        RouteKeys = new List<string>
-                        {
-                            "KeyB",
-                            "KeyBB"
-                        },
-                        UpstreamPathTemplate = "UpstreamPathTemplate",
-                    },
-                    new FileAggregateRoute
-                    {
-                        RouteKeys = new List<string>
-                        {
-                            "KeyB",
-                            "KeyBB"
-                        },
-                        UpstreamPathTemplate = "UpstreamPathTemplate",
-                    }
-                }
-            };
-
-            _envSpecific = new FileConfiguration
-            {
-                Routes = new List<FileRoute>
-                    {
-                        new FileRoute
-                        {
-                            DownstreamScheme = "DownstreamSchemeSpec",
-                            DownstreamPathTemplate = "DownstreamPathTemplateSpec",
-                            Key = "KeySpec",
-                            UpstreamHost = "UpstreamHostSpec",
-                            UpstreamHttpMethod = new List<string>
-                            {
-                                "UpstreamHttpMethodSpec"
-                            },
-                            DownstreamHostAndPorts = new List<FileHostAndPort>
-                            {
-                                new FileHostAndPort
-                                {
-                                    Host = "HostSpec",
-                                    Port = 80
-                                }
-                            }
-                        }
-                    }
-            };
-
-            string globalFilename = Path.Combine(folder, "ocelot.global.json");
-            string routesAFilename = Path.Combine(folder, "ocelot.routesA.json");
-            string routesBFilename = Path.Combine(folder, "ocelot.routesB.json");
-            string aggregatesFilename = Path.Combine(folder, "ocelot.aggregates.json");
-
-            File.WriteAllText(globalFilename, JsonConvert.SerializeObject(_globalConfig));
-            File.WriteAllText(routesAFilename, JsonConvert.SerializeObject(_routeA));
-            File.WriteAllText(routesBFilename, JsonConvert.SerializeObject(_routeB));
-            File.WriteAllText(aggregatesFilename, JsonConvert.SerializeObject(_aggregate));
-
-            if (addEnvSpecificConfig)
-            {
-                string envSpecificFilename = Path.Combine(folder, "ocelot.Env.json");
-                File.WriteAllText(envSpecificFilename, JsonConvert.SerializeObject(_envSpecific));
-            }
-        }
-
-        private void GivenTheEnvironmentIs(string env)
+        private static List<FileAggregateRoute> GetFileAggregatesRouteData() => new()
         {
-            _hostingEnvironment.SetupGet(x => x.EnvironmentName).Returns(env);
-        }
+            new()
+            {
+                RouteKeys = new() { "KeyB", "KeyBB" },
+                UpstreamPathTemplate = "UpstreamPathTemplate",
+            },
+        };
 
-        private void WhenIAddOcelotConfiguration()
+        private static FileRoute GetRoute(string suffix) => new()
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder();
+            DownstreamScheme = "DownstreamScheme" + suffix,
+            DownstreamPathTemplate = "DownstreamPathTemplate" + suffix,
+            Key = "Key" + suffix,
+            UpstreamHost = "UpstreamHost" + suffix,
+            UpstreamHttpMethod = new() { "UpstreamHttpMethod" + suffix },
+            DownstreamHostAndPorts = new()
+            {
+                new("Host"+suffix, 80),
+            },
+        };
 
-            builder.AddOcelot(_hostingEnvironment.Object);
+        private static List<FileRoute> GetServiceARoutes() => new() { GetRoute("A") };
+        private static List<FileRoute> GetServiceBRoutes() => new() { GetRoute("B"), GetRoute("BB") };
+        private static List<FileRoute> GetEnvironmentSpecificRoutes() => new() { GetRoute("Spec") };
 
-            _configRoot = builder.Build();
-        }
-
-        private void WhenIAddOcelotConfigurationWithSpecificFolder(string folder)
+        private void GivenTheEnvironmentIs(string folder, [CallerMemberName] string testName = null)
         {
-            IConfigurationBuilder builder = new ConfigurationBuilder();
-            builder.AddOcelot(folder, _hostingEnvironment.Object);
-            _configRoot = builder.Build();
+            _hostingEnvironment.SetupGet(x => x.EnvironmentName).Returns(testName);
+            _environmentConfigFileName = Path.Combine(folder, string.Format(ConfigurationBuilderExtensions.EnvironmentConfigFile, testName));
+            _files.Add(_environmentConfigFileName);
         }
 
-        private void ThenTheConfigsAreMerged()
+        private void WhenIAddOcelotConfigurationWithCombinedFileConfiguration()
+        {
+            _configRoot = new ConfigurationBuilder()
+                .AddOcelot(_combinedFileConfiguration, _primaryConfigFileName, false, false)
+                .Build();
+        }
+
+        private void WhenIAddOcelotConfiguration(string folder, MergeOcelotJson mergeOcelotJson = MergeOcelotJson.ToFile)
+        {
+            _configRoot = new ConfigurationBuilder()
+                .AddOcelot(folder, _hostingEnvironment.Object, mergeOcelotJson, _primaryConfigFileName, _globalConfigFileName, _environmentConfigFileName, false, false)
+                .Build();
+        }
+
+        private void ThenTheConfigsAreMergedAndAddedInApplicationConfiguration(bool useCombinedConfig)
         {
             var fc = (FileConfiguration)_configRoot.Get(typeof(FileConfiguration));
 
-            fc.GlobalConfiguration.BaseUrl.ShouldBe(_globalConfig.GlobalConfiguration.BaseUrl);
-            fc.GlobalConfiguration.RateLimitOptions.ClientIdHeader.ShouldBe(_globalConfig.GlobalConfiguration.RateLimitOptions.ClientIdHeader);
-            fc.GlobalConfiguration.RateLimitOptions.DisableRateLimitHeaders.ShouldBe(_globalConfig.GlobalConfiguration.RateLimitOptions.DisableRateLimitHeaders);
-            fc.GlobalConfiguration.RateLimitOptions.HttpStatusCode.ShouldBe(_globalConfig.GlobalConfiguration.RateLimitOptions.HttpStatusCode);
-            fc.GlobalConfiguration.RateLimitOptions.QuotaExceededMessage.ShouldBe(_globalConfig.GlobalConfiguration.RateLimitOptions.QuotaExceededMessage);
-            fc.GlobalConfiguration.RateLimitOptions.RateLimitCounterPrefix.ShouldBe(_globalConfig.GlobalConfiguration.RateLimitOptions.RateLimitCounterPrefix);
-            fc.GlobalConfiguration.RequestIdKey.ShouldBe(_globalConfig.GlobalConfiguration.RequestIdKey);
-            fc.GlobalConfiguration.ServiceDiscoveryProvider.Scheme.ShouldBe(_globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Scheme);
-            fc.GlobalConfiguration.ServiceDiscoveryProvider.Host.ShouldBe(_globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Host);
-            fc.GlobalConfiguration.ServiceDiscoveryProvider.Port.ShouldBe(_globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Port);
-            fc.GlobalConfiguration.ServiceDiscoveryProvider.Type.ShouldBe(_globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Type);
+            fc.GlobalConfiguration.BaseUrl.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.BaseUrl : _globalConfig.GlobalConfiguration.BaseUrl);
+            fc.GlobalConfiguration.RateLimitOptions.ClientIdHeader.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.RateLimitOptions.ClientIdHeader : _globalConfig.GlobalConfiguration.RateLimitOptions.ClientIdHeader);
+            fc.GlobalConfiguration.RateLimitOptions.DisableRateLimitHeaders.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.RateLimitOptions.DisableRateLimitHeaders : _globalConfig.GlobalConfiguration.RateLimitOptions.DisableRateLimitHeaders);
+            fc.GlobalConfiguration.RateLimitOptions.HttpStatusCode.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.RateLimitOptions.HttpStatusCode : _globalConfig.GlobalConfiguration.RateLimitOptions.HttpStatusCode);
+            fc.GlobalConfiguration.RateLimitOptions.QuotaExceededMessage.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.RateLimitOptions.QuotaExceededMessage : _globalConfig.GlobalConfiguration.RateLimitOptions.QuotaExceededMessage);
+            fc.GlobalConfiguration.RateLimitOptions.RateLimitCounterPrefix.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.RateLimitOptions.RateLimitCounterPrefix : _globalConfig.GlobalConfiguration.RateLimitOptions.RateLimitCounterPrefix);
+            fc.GlobalConfiguration.RequestIdKey.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.RequestIdKey : _globalConfig.GlobalConfiguration.RequestIdKey);
+            fc.GlobalConfiguration.ServiceDiscoveryProvider.Scheme.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.ServiceDiscoveryProvider.Scheme : _globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Scheme);
+            fc.GlobalConfiguration.ServiceDiscoveryProvider.Host.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.ServiceDiscoveryProvider.Host : _globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Host);
+            fc.GlobalConfiguration.ServiceDiscoveryProvider.Port.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.ServiceDiscoveryProvider.Port : _globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Port);
+            fc.GlobalConfiguration.ServiceDiscoveryProvider.Type.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.GlobalConfiguration.ServiceDiscoveryProvider.Type : _globalConfig.GlobalConfiguration.ServiceDiscoveryProvider.Type);
 
-            fc.Routes.Count.ShouldBe(_routeA.Routes.Count + _routeB.Routes.Count);
+            fc.Routes.Count.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.Routes.Count : _routeA.Routes.Count + _routeB.Routes.Count);
 
-            fc.Routes.ShouldContain(x => x.DownstreamPathTemplate == _routeA.Routes[0].DownstreamPathTemplate);
-            fc.Routes.ShouldContain(x => x.DownstreamPathTemplate == _routeB.Routes[0].DownstreamPathTemplate);
-            fc.Routes.ShouldContain(x => x.DownstreamPathTemplate == _routeB.Routes[1].DownstreamPathTemplate);
+            fc.Routes.ShouldContain(x => x.DownstreamPathTemplate == (useCombinedConfig ? _combinedFileConfiguration.Routes[0].DownstreamPathTemplate : _routeA.Routes[0].DownstreamPathTemplate));
+            fc.Routes.ShouldContain(x => x.DownstreamPathTemplate == (useCombinedConfig ? _combinedFileConfiguration.Routes[1].DownstreamPathTemplate : _routeB.Routes[0].DownstreamPathTemplate));
+            fc.Routes.ShouldContain(x => x.DownstreamPathTemplate == (useCombinedConfig ? _combinedFileConfiguration.Routes[2].DownstreamPathTemplate : _routeB.Routes[1].DownstreamPathTemplate));
 
-            fc.Routes.ShouldContain(x => x.DownstreamScheme == _routeA.Routes[0].DownstreamScheme);
-            fc.Routes.ShouldContain(x => x.DownstreamScheme == _routeB.Routes[0].DownstreamScheme);
-            fc.Routes.ShouldContain(x => x.DownstreamScheme == _routeB.Routes[1].DownstreamScheme);
+            fc.Routes.ShouldContain(x => x.DownstreamScheme == (useCombinedConfig ? _combinedFileConfiguration.Routes[0].DownstreamScheme : _routeA.Routes[0].DownstreamScheme));
+            fc.Routes.ShouldContain(x => x.DownstreamScheme == (useCombinedConfig ? _combinedFileConfiguration.Routes[1].DownstreamScheme : _routeB.Routes[0].DownstreamScheme));
+            fc.Routes.ShouldContain(x => x.DownstreamScheme == (useCombinedConfig ? _combinedFileConfiguration.Routes[2].DownstreamScheme : _routeB.Routes[1].DownstreamScheme));
 
-            fc.Routes.ShouldContain(x => x.Key == _routeA.Routes[0].Key);
-            fc.Routes.ShouldContain(x => x.Key == _routeB.Routes[0].Key);
-            fc.Routes.ShouldContain(x => x.Key == _routeB.Routes[1].Key);
+            fc.Routes.ShouldContain(x => x.Key == (useCombinedConfig ? _combinedFileConfiguration.Routes[0].Key : _routeA.Routes[0].Key));
+            fc.Routes.ShouldContain(x => x.Key == (useCombinedConfig ? _combinedFileConfiguration.Routes[1].Key : _routeB.Routes[0].Key));
+            fc.Routes.ShouldContain(x => x.Key == (useCombinedConfig ? _combinedFileConfiguration.Routes[2].Key : _routeB.Routes[1].Key));
 
-            fc.Routes.ShouldContain(x => x.UpstreamHost == _routeA.Routes[0].UpstreamHost);
-            fc.Routes.ShouldContain(x => x.UpstreamHost == _routeB.Routes[0].UpstreamHost);
-            fc.Routes.ShouldContain(x => x.UpstreamHost == _routeB.Routes[1].UpstreamHost);
+            fc.Routes.ShouldContain(x => x.UpstreamHost == (useCombinedConfig ? _combinedFileConfiguration.Routes[0].UpstreamHost : _routeA.Routes[0].UpstreamHost));
+            fc.Routes.ShouldContain(x => x.UpstreamHost == (useCombinedConfig ? _combinedFileConfiguration.Routes[1].UpstreamHost : _routeB.Routes[0].UpstreamHost));
+            fc.Routes.ShouldContain(x => x.UpstreamHost == (useCombinedConfig ? _combinedFileConfiguration.Routes[2].UpstreamHost : _routeB.Routes[1].UpstreamHost));
 
-            fc.Aggregates.Count.ShouldBe(_aggregate.Aggregates.Count);
+            fc.Aggregates.Count.ShouldBe(useCombinedConfig ? _combinedFileConfiguration.Aggregates.Count :_aggregate.Aggregates.Count);
         }
 
         private void NotContainsEnvSpecificConfig()
@@ -310,25 +289,6 @@
             fc.Routes.ShouldNotContain(x => x.DownstreamScheme == _envSpecific.Routes[0].DownstreamScheme);
             fc.Routes.ShouldNotContain(x => x.DownstreamPathTemplate == _envSpecific.Routes[0].DownstreamPathTemplate);
             fc.Routes.ShouldNotContain(x => x.Key == _envSpecific.Routes[0].Key);
-        }
-
-        private void GivenTheBaseUrl(string baseUrl)
-        {
-#pragma warning disable CS0618
-            var builder = new ConfigurationBuilder()
-                .AddOcelotBaseUrl(baseUrl);
-#pragma warning restore CS0618
-            _configuration = builder.Build();
-        }
-
-        private void WhenIGet(string key)
-        {
-            _result = _configuration.GetValue(key, "");
-        }
-
-        private void ThenTheResultIs(string expected)
-        {
-            _result.ShouldBe(expected);
         }
     }
 }

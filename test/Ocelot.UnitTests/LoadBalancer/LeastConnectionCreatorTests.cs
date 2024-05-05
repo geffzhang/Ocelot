@@ -1,16 +1,12 @@
-﻿namespace Ocelot.UnitTests.LoadBalancer
-{
-    using Moq;
-    using Ocelot.Configuration;
-    using Ocelot.Configuration.Builder;
-    using Ocelot.LoadBalancer.LoadBalancers;
-    using Ocelot.Responses;
-    using Ocelot.ServiceDiscovery.Providers;
-    using Shouldly;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Ocelot.Configuration;
+using Ocelot.Configuration.Builder;
+using Ocelot.LoadBalancer.LoadBalancers;
+using Ocelot.Responses;
+using Ocelot.ServiceDiscovery.Providers;
 
-    public class LeastConnectionCreatorTests
+namespace Ocelot.UnitTests.LoadBalancer
+{
+    public class LeastConnectionCreatorTests : UnitTest
     {
         private readonly LeastConnectionCreator _creator;
         private readonly Mock<IServiceDiscoveryProvider> _serviceProvider;
@@ -23,7 +19,7 @@
             _creator = new LeastConnectionCreator();
             _serviceProvider = new Mock<IServiceDiscoveryProvider>();
         }
-        
+
         [Fact]
         public void should_return_instance_of_expected_load_balancer_type()
         {
@@ -36,7 +32,7 @@
                 .Then(x => x.ThenTheLoadBalancerIsReturned<LeastConnection>())
                 .BDDfy();
         }
-                
+
         [Fact]
         public void should_return_expected_name()
         {
@@ -54,7 +50,7 @@
         {
             _loadBalancer = _creator.Create(_route, _serviceProvider.Object);
         }
-        
+
         private void WhenIGetTheLoadBalancerTypeName()
         {
             _typeName = _creator.Type;

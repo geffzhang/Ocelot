@@ -1,9 +1,7 @@
-﻿namespace Ocelot.Cache
-{
-    using System;
-    using System.Collections.Generic;
-    using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 
+namespace Ocelot.Cache
+{
     public class AspMemoryCache<T> : IOcelotCache<T>
     {
         private readonly IMemoryCache _memoryCache;
@@ -28,7 +26,7 @@
         }
 
         public T Get(string key, string region)
-        {   
+        {
             if (_memoryCache.TryGetValue(key, out T value))
             {
                 return value;
@@ -51,7 +49,7 @@
 
         public void AddAndDelete(string key, T value, TimeSpan ttl, string region)
         {
-            if (_memoryCache.TryGetValue(key, out T oldValue))
+            if (_memoryCache.TryGetValue(key, out T _))
             {
                 _memoryCache.Remove(key);
             }

@@ -1,18 +1,15 @@
-﻿namespace Ocelot.Security.Middleware
-{
-    using Ocelot.Logging;
-    using Ocelot.Middleware;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.DownstreamRouteFinder.Middleware;
+﻿using Microsoft.AspNetCore.Http;
+using Ocelot.Logging;
+using Ocelot.Middleware;
 
+namespace Ocelot.Security.Middleware
+{
     public class SecurityMiddleware : OcelotMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly IEnumerable<ISecurityPolicy> _securityPolicies;
 
-        public SecurityMiddleware(RequestDelegate next, 
+        public SecurityMiddleware(RequestDelegate next,
             IOcelotLoggerFactory loggerFactory,
             IEnumerable<ISecurityPolicy> securityPolicies
             )

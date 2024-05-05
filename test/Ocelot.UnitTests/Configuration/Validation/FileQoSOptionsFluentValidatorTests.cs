@@ -1,18 +1,18 @@
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Ocelot.Configuration;
 using Ocelot.Configuration.File;
 using Ocelot.Configuration.Validator;
+using Ocelot.Logging;
 using Ocelot.Requester;
-using Shouldly;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration.Validation
 {
-    public class FileQoSOptionsFluentValidatorTests
+    public class FileQoSOptionsFluentValidatorTests : UnitTest
     {
         private FileQoSOptionsFluentValidator _validator;
-        private ServiceCollection _services;
+        private readonly ServiceCollection _services;
         private ValidationResult _result;
         private FileQoSOptions _qosOptions;
 
@@ -38,7 +38,7 @@ namespace Ocelot.UnitTests.Configuration.Validation
             var qosOptions = new FileQoSOptions
             {
                 TimeoutValue = 1,
-                ExceptionsAllowedBeforeBreaking = 1
+                ExceptionsAllowedBeforeBreaking = 1,
             };
 
             this.Given(_ => GivenThe(qosOptions))
@@ -54,7 +54,7 @@ namespace Ocelot.UnitTests.Configuration.Validation
             var qosOptions = new FileQoSOptions
             {
                 TimeoutValue = 1,
-                ExceptionsAllowedBeforeBreaking = 1
+                ExceptionsAllowedBeforeBreaking = 1,
             };
 
             this.Given(_ => GivenThe(qosOptions))
@@ -76,11 +76,8 @@ namespace Ocelot.UnitTests.Configuration.Validation
 
         private void GivenAQosDelegate()
         {
-            QosDelegatingHandlerDelegate fake = (a, b) =>
-            {
-                return null;
-            };
-            _services.AddSingleton<QosDelegatingHandlerDelegate>(fake);
+            DelegatingHandler Fake(DownstreamRoute a, IHttpContextAccessor b, IOcelotLoggerFactory c) => null;
+            _services.AddSingleton((QosDelegatingHandlerDelegate)Fake);
             var provider = _services.BuildServiceProvider();
             _validator = new FileQoSOptionsFluentValidator(provider);
         }

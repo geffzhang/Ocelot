@@ -2,13 +2,10 @@ using Ocelot.Configuration;
 using Ocelot.Configuration.Builder;
 using Ocelot.Configuration.Creator;
 using Ocelot.Configuration.File;
-using Shouldly;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration
 {
-    public class ServiceProviderCreatorTests
+    public class ServiceProviderCreatorTests : UnitTest
     {
         private readonly ServiceProviderConfigurationCreator _creator;
         private FileGlobalConfiguration _globalConfig;
@@ -32,8 +29,8 @@ namespace Ocelot.UnitTests.Configuration
                     Type = "ServiceFabric",
                     Token = "testtoken",
                     ConfigurationKey = "woo",
-                    Namespace = "default"
-                }
+                    Namespace = "default",
+                },
             };
 
             var expected = new ServiceProviderConfigurationBuilder()

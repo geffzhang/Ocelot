@@ -16,8 +16,8 @@
         NoInstructionsError = 11,
         InstructionNotForClaimsError = 12,
         UnauthorizedError = 13,
-        ClaimValueNotAuthorisedError = 14,
-        ScopeNotAuthorisedError = 15,
+        ClaimValueNotAuthorizedError = 14,
+        ScopeNotAuthorizedError = 15,
         UserDoesNotHaveClaimError = 16,
         DownstreamPathTemplateContainsSchemeError = 17,
         DownstreamPathNullOrEmptyError = 18,
@@ -43,5 +43,6 @@
         ConnectionToDownstreamServiceError = 38,
         CouldNotFindLoadBalancerCreator = 39,
         ErrorInvokingLoadBalancerCreator = 40,
+        PayloadTooLargeError = 41,
     }
 }

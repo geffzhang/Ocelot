@@ -1,17 +1,15 @@
 using Ocelot.Configuration.Creator;
 using Ocelot.Configuration.File;
 using Ocelot.Values;
-using Shouldly;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration
 {
-    public class UpstreamTemplatePatternCreatorTests
+    public class UpstreamTemplatePatternCreatorTests : UnitTest
     {
         private FileRoute _fileRoute;
         private readonly UpstreamTemplatePatternCreator _creator;
         private UpstreamPathTemplate _result;
+        private const string MatchEverything = UpstreamTemplatePatternCreator.RegExMatchZeroOrMoreOfEverything;
 
         public UpstreamTemplatePatternCreatorTests()
         {
@@ -24,7 +22,7 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/api/v{apiVersion}/cards",
-                Priority = 0
+                Priority = 0,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -40,12 +38,12 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/orders/{catchAll}",
-                Priority = 0
+                Priority = 0,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^(?i)/orders/.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^(?i)/orders(?:|/{MatchEverything})$"))
                 .And(x => ThenThePriorityIs(0))
                 .BDDfy();
         }
@@ -56,7 +54,7 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/{catchAll}",
-                Priority = 1
+                Priority = 1,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -72,12 +70,12 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/PRODUCTS/{productId}",
-                RouteIsCaseSensitive = false
+                RouteIsCaseSensitive = false,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^(?i)/PRODUCTS/.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^(?i)/PRODUCTS(?:|/{MatchEverything})$"))
                 .And(x => ThenThePriorityIs(1))
                 .BDDfy();
         }
@@ -88,7 +86,7 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/PRODUCTS/",
-                RouteIsCaseSensitive = false
+                RouteIsCaseSensitive = false,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -104,11 +102,11 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/PRODUCTS/{productId}",
-                RouteIsCaseSensitive = true
+                RouteIsCaseSensitive = true,
             };
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^/PRODUCTS/.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^/PRODUCTS(?:|/{MatchEverything})$"))
                 .And(x => ThenThePriorityIs(1))
                 .BDDfy();
         }
@@ -119,12 +117,12 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/api/products/{productId}",
-                RouteIsCaseSensitive = true
+                RouteIsCaseSensitive = true,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^/api/products/.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^/api/products(?:|/{MatchEverything})$"))
                 .And(x => ThenThePriorityIs(1))
                 .BDDfy();
         }
@@ -135,12 +133,12 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/api/products/{productId}/variants/{variantId}",
-                RouteIsCaseSensitive = true
+                RouteIsCaseSensitive = true,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^/api/products/[^/]+/variants/.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^/api/products/[^/]+/variants(?:|/{MatchEverything})$"))
                 .And(x => ThenThePriorityIs(1))
                 .BDDfy();
         }
@@ -151,7 +149,7 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/api/products/{productId}/variants/{variantId}/",
-                RouteIsCaseSensitive = true
+                RouteIsCaseSensitive = true,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -166,7 +164,7 @@ namespace Ocelot.UnitTests.Configuration
         {
             var fileRoute = new FileRoute
             {
-                UpstreamPathTemplate = "/"
+                UpstreamPathTemplate = "/",
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -181,7 +179,7 @@ namespace Ocelot.UnitTests.Configuration
         {
             var fileRoute = new FileRoute
             {
-                UpstreamPathTemplate = "/{url}"
+                UpstreamPathTemplate = "/{url}",
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -197,7 +195,7 @@ namespace Ocelot.UnitTests.Configuration
             var fileRoute = new FileRoute
             {
                 UpstreamPathTemplate = "/{productId}/products/variants/{variantId}/",
-                RouteIsCaseSensitive = true
+                RouteIsCaseSensitive = true,
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
@@ -212,12 +210,12 @@ namespace Ocelot.UnitTests.Configuration
         {
             var fileRoute = new FileRoute
             {
-                UpstreamPathTemplate = "/api/subscriptions/{subscriptionId}/updates?unitId={unitId}"
+                UpstreamPathTemplate = "/api/subscriptions/{subscriptionId}/updates?unitId={unitId}",
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^(?i)/api/subscriptions/[^/]+/updates\\?unitId=.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^(?i)/api/subscriptions/[^/]+/updates(|\\?)unitId={MatchEverything}$"))
                 .And(x => ThenThePriorityIs(1))
                 .BDDfy();
         }
@@ -227,12 +225,12 @@ namespace Ocelot.UnitTests.Configuration
         {
             var fileRoute = new FileRoute
             {
-                UpstreamPathTemplate = "/api/subscriptions/{subscriptionId}/updates?unitId={unitId}&productId={productId}"
+                UpstreamPathTemplate = "/api/subscriptions/{subscriptionId}/updates?unitId={unitId}&productId={productId}",
             };
 
             this.Given(x => x.GivenTheFollowingFileRoute(fileRoute))
                 .When(x => x.WhenICreateTheTemplatePattern())
-                .Then(x => x.ThenTheFollowingIsReturned("^(?i)/api/subscriptions/[^/]+/updates\\?unitId=.+&productId=.+$"))
+                .Then(x => x.ThenTheFollowingIsReturned($"^(?i)/api/subscriptions/[^/]+/updates(|\\?)unitId={MatchEverything}&productId={MatchEverything}$"))
                 .And(x => ThenThePriorityIs(1))
                 .BDDfy();
         }

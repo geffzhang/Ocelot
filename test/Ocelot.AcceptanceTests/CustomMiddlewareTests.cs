@@ -1,20 +1,12 @@
-﻿namespace Ocelot.AcceptanceTests
-{
-    using Microsoft.AspNetCore.Http;
-    using Ocelot.Configuration.File;
-    using Ocelot.Middleware;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Net;
-    using System.Threading.Tasks;
-    using TestStack.BDDfy;
-    using Xunit;
+﻿using Microsoft.AspNetCore.Http;
+using Ocelot.Configuration.File;
+using Ocelot.Middleware;
+using System.Diagnostics;
 
+namespace Ocelot.AcceptanceTests
+{
     public class CustomMiddlewareTests : IDisposable
     {
-        private readonly string _configurationPath;
         private readonly Steps _steps;
         private int _counter;
         private readonly ServiceHandler _serviceHandler;
@@ -24,7 +16,6 @@
             _serviceHandler = new ServiceHandler();
             _counter = 0;
             _steps = new Steps();
-            _configurationPath = "ocelot.json";
         }
 
         [Fact]
@@ -32,39 +23,39 @@
         {
             var configuration = new OcelotPipelineConfiguration
             {
-                AuthorisationMiddleware = async (ctx, next) =>
+                AuthorizationMiddleware = async (ctx, next) =>
                 {
                     _counter++;
                     await next.Invoke();
-                }
+                },
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, ""))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, string.Empty))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
                 .And(x => _steps.GivenOcelotIsRunning(configuration))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
@@ -73,43 +64,43 @@
         }
 
         [Fact]
-        public void should_call_authorisation_middleware()
+        public void should_call_authorization_middleware()
         {
             var configuration = new OcelotPipelineConfiguration
             {
-                AuthorisationMiddleware = async (ctx, next) =>
+                AuthorizationMiddleware = async (ctx, next) =>
                 {
                     _counter++;
                     await next.Invoke();
-                }
+                },
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, ""))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, string.Empty))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
                 .And(x => _steps.GivenOcelotIsRunning(configuration))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
@@ -126,35 +117,35 @@
                 {
                     _counter++;
                     await next.Invoke();
-                }
+                },
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/41879/",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, ""))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, string.Empty))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
                 .And(x => _steps.GivenOcelotIsRunning(configuration))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
@@ -171,35 +162,35 @@
                 {
                     _counter++;
                     await next.Invoke();
-                }
+                },
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, ""))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, string.Empty))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
                 .And(x => _steps.GivenOcelotIsRunning(configuration))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
@@ -208,43 +199,43 @@
         }
 
         [Fact]
-        public void should_call_pre_authorisation_middleware()
+        public void should_call_pre_authorization_middleware()
         {
             var configuration = new OcelotPipelineConfiguration
             {
-                PreAuthorisationMiddleware = async (ctx, next) =>
+                PreAuthorizationMiddleware = async (ctx, next) =>
                 {
                     _counter++;
                     await next.Invoke();
-                }
+                },
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, ""))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, string.Empty))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
                 .And(x => _steps.GivenOcelotIsRunning(configuration))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
@@ -261,35 +252,81 @@
                 {
                     _counter++;
                     await next.Invoke();
-                }
+                },
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
+            };
+
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, string.Empty))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
+                .And(x => _steps.GivenOcelotIsRunning(configuration))
+                .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
+                .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
+                .And(x => x.ThenTheCounterIs(1))
+                .BDDfy();
+        }
+
+        [Fact]
+        public void should_not_throw_when_pipeline_terminates_early()
+        {
+            var configuration = new OcelotPipelineConfiguration
+            {
+                PreQueryStringBuilderMiddleware = (context, next) =>
+                    Task.Run(() =>
+                    {
+                        _counter++;
+                        return; // do not invoke the rest of the pipeline
+                    }),
+            };
+
+            var port = PortFinder.GetRandomPort();
+
+            var fileConfiguration = new FileConfiguration
+            {
+                Routes = new List<FileRoute>
+                    {
+                        new()
+                        {
+                            DownstreamPathTemplate = "/",
+                            DownstreamHostAndPorts = new List<FileHostAndPort>
+                            {
+                                new()
+                                {
+                                    Host = "localhost",
+                                    Port = port,
+                                },
+                            },
+                            DownstreamScheme = "http",
+                            UpstreamPathTemplate = "/",
+                            UpstreamHttpMethod = new List<string> { "Get" },
+                        },
+                    },
             };
 
             this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, ""))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
                 .And(x => _steps.GivenOcelotIsRunning(configuration))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
@@ -313,33 +350,33 @@
                 return Task.CompletedTask;
             };
 
-            var port = RandomPortFinder.GetRandomPort();
+            var port = PortFinder.GetRandomPort();
 
             var fileConfiguration = new FileConfiguration
             {
                 Routes = new List<FileRoute>
                     {
-                        new FileRoute
+                        new()
                         {
                             DownstreamPathTemplate = "/west",
                             DownstreamHostAndPorts = new List<FileHostAndPort>
                             {
-                                new FileHostAndPort
+                                new()
                                 {
                                     Host = "localhost",
                                     Port = port,
-                                }
+                                },
                             },
                             DownstreamScheme = "http",
                             UpstreamPathTemplate = "/",
                             UpstreamHttpMethod = new List<string> { "Get" },
-                        }
-                    }
+                        },
+                    },
             };
 
             this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, "/test"))
-                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration, _configurationPath))
-                .And(x => _steps.GivenOcelotIsRunningWithMiddleareBeforePipeline<FakeMiddleware>(callback))
+                .And(x => _steps.GivenThereIsAConfiguration(fileConfiguration))
+                .And(x => _steps.GivenOcelotIsRunningWithMiddlewareBeforePipeline<FakeMiddleware>(callback))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.NotFound))
                 .BDDfy();

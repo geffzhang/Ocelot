@@ -1,7 +1,5 @@
 ﻿namespace Ocelot.Cache
 {
-    using System;
-
     internal class CacheObject<T>
     {
         public CacheObject(T value, DateTime expires)

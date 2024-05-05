@@ -1,10 +1,8 @@
+using Ocelot.Configuration.Builder;
+using Ocelot.Configuration.File;
+
 namespace Ocelot.Configuration.Creator
 {
-    using Builder;
-    using File;
-    using System.Collections.Generic;
-    using System.Linq;
-
     public class AggregatesCreator : IAggregatesCreator
     {
         private readonly IUpstreamTemplatePatternCreator _creator;
@@ -26,16 +24,15 @@ namespace Ocelot.Configuration.Creator
         {
             var applicableRoutes = new List<DownstreamRoute>();
             var allRoutes = routes.SelectMany(x => x.DownstreamRoute);
-
-            foreach (var routeKey in aggregateRoute.RouteKeys)
+            var downstreamRoutes = aggregateRoute.RouteKeys.Select(routeKey => allRoutes.FirstOrDefault(q => q.Key == routeKey));
+            foreach (var downstreamRoute in downstreamRoutes)
             {
-                var selec = allRoutes.FirstOrDefault(q => q.Key == routeKey);
-                if (selec == null)
+                if (downstreamRoute == null)
                 {
                     return null;
                 }
 
-                applicableRoutes.Add(selec);
+                applicableRoutes.Add(downstreamRoute);
             }
 
             var upstreamTemplatePattern = _creator.Create(aggregateRoute);

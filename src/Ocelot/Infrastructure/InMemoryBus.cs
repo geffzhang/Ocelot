@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Ocelot.Infrastructure
 {
     public class InMemoryBus<T> : IBus<T>
     {
         private readonly BlockingCollection<DelayedMessage<T>> _queue;
         private readonly List<Action<T>> _subscriptions;
-        private Thread _processing;
+        private readonly Thread _processing;
 
         public InMemoryBus()
         {

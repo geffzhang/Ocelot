@@ -1,22 +1,16 @@
+using Microsoft.Extensions.DependencyInjection;
+using Ocelot.Configuration;
+using Ocelot.Configuration.Builder;
+using Ocelot.Configuration.Creator;
+using Ocelot.Logging;
+using Ocelot.Requester;
+using Ocelot.Requester.QoS;
+using Ocelot.Responses;
+using Ocelot.UnitTests.Responder;
+
 namespace Ocelot.UnitTests.Requester
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using Ocelot.Configuration;
-    using Ocelot.Configuration.Builder;
-    using Ocelot.Logging;
-    using Ocelot.Requester;
-    using Ocelot.Requester.QoS;
-    using Ocelot.Responses;
-    using Responder;
-    using Shouldly;
-    using System;
-    using System.Collections.Generic;
-    using System.Net.Http;
-    using TestStack.BDDfy;
-    using Xunit;
-
-    public class DelegatingHandlerHandlerProviderFactoryTests
+    public class DelegatingHandlerHandlerProviderFactoryTests : UnitTest
     {
         private DelegatingHandlerHandlerFactory _factory;
         private readonly Mock<IOcelotLoggerFactory> _loggerFactory;
@@ -31,7 +25,7 @@ namespace Ocelot.UnitTests.Requester
 
         public DelegatingHandlerHandlerProviderFactoryTests()
         {
-            _qosDelegate = (a, b) => new FakeQoSHandler();
+            _qosDelegate = (a, b, c) => new FakeQoSHandler();
             _tracingFactory = new Mock<ITracingHandlerFactory>();
             _qosFactory = new Mock<IQoSFactory>();
             _loggerFactory = new Mock<IOcelotLoggerFactory>();
@@ -52,13 +46,13 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
                 .WithDelegatingHandlers(new List<string>
                 {
                     "FakeDelegatingHandler",
-                    "FakeDelegatingHandlerTwo"
+                    "FakeDelegatingHandlerTwo",
                 })
-                .WithLoadBalancerKey("")
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -88,14 +82,14 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
                 .WithDelegatingHandlers(new List<string>
                 {
                     "FakeDelegatingHandlerTwo",
                     "FakeDelegatingHandler",
-                    "FakeDelegatingHandlerFour"
+                    "FakeDelegatingHandlerFour",
                 })
-                .WithLoadBalancerKey("")
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -125,13 +119,13 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
                 .WithDelegatingHandlers(new List<string>
                 {
                     "FakeDelegatingHandlerTwo",
-                    "FakeDelegatingHandler"
+                    "FakeDelegatingHandler",
                 })
-                .WithLoadBalancerKey("")
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -161,12 +155,12 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
                 .WithDelegatingHandlers(new List<string>
                 {
                     "FakeDelegatingHandler",
                 })
-                .WithLoadBalancerKey("")
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -195,8 +189,8 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
-                .WithLoadBalancerKey("")
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -221,13 +215,13 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue))
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue, DefaultPooledConnectionLifeTime))
                 .WithDelegatingHandlers(new List<string>
                 {
                     "FakeDelegatingHandler",
-                    "FakeDelegatingHandlerTwo"
+                    "FakeDelegatingHandlerTwo",
                 })
-                .WithLoadBalancerKey("")
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -249,7 +243,9 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue)).WithLoadBalancerKey("").Build();
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
+                .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
                 .And(x => GivenTheQosFactoryReturns(new FakeQoSHandler()))
@@ -269,7 +265,9 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue)).WithLoadBalancerKey("").Build();
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
+                .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
                 .And(x => GivenTheServiceProviderReturnsNothing())
@@ -289,7 +287,9 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue)).WithLoadBalancerKey("").Build();
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
+                .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
                 .And(x => GivenTheQosFactoryReturns(new FakeQoSHandler()))
@@ -309,7 +309,9 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue)).WithLoadBalancerKey("").Build();
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, false, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
+                .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
                 .And(x => GivenTheQosFactoryReturns(new FakeQoSHandler()))
@@ -331,8 +333,8 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
-                .WithLoadBalancerKey("")
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -361,8 +363,8 @@ namespace Ocelot.UnitTests.Requester
 
             var route = new DownstreamRouteBuilder()
                 .WithQosOptions(qosOptions)
-                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue))
-                .WithLoadBalancerKey("")
+                .WithHttpHandlerOptions(new HttpHandlerOptions(true, true, true, true, int.MaxValue, DefaultPooledConnectionLifeTime))
+                .WithLoadBalancerKey(string.Empty)
                 .Build();
 
             this.Given(x => GivenTheFollowingRequest(route))
@@ -382,7 +384,7 @@ namespace Ocelot.UnitTests.Requester
 
         private void ThenTheWarningIsLogged()
         {
-            _logger.Verify(x => x.LogWarning($"Route {_downstreamRoute.UpstreamPathTemplate} specifies use QoS but no QosHandler found in DI container. Will use not use a QosHandler, please check your setup!"), Times.Once);
+            _logger.Verify(x => x.LogWarning(It.Is<Func<string>>(y => y.Invoke() == $"Route {_downstreamRoute.UpstreamPathTemplate} specifies use QoS but no QosHandler found in DI container. Will use not use a QosHandler, please check your setup!")), Times.Once);
         }
 
         private void ThenHandlerAtPositionIs<T>(int pos)
@@ -405,13 +407,13 @@ namespace Ocelot.UnitTests.Requester
             where TTwo : DelegatingHandler
         {
             _services.AddTransient<TOne>();
-            _services.AddTransient<GlobalDelegatingHandler>(s =>
+            _services.AddTransient(s =>
             {
                 var service = s.GetService<TOne>();
                 return new GlobalDelegatingHandler(service);
             });
             _services.AddTransient<TTwo>();
-            _services.AddTransient<GlobalDelegatingHandler>(s =>
+            _services.AddTransient(s =>
             {
                 var service = s.GetService<TTwo>();
                 return new GlobalDelegatingHandler(service);
@@ -500,6 +502,11 @@ namespace Ocelot.UnitTests.Requester
             _result.ShouldNotBeNull();
             _result.Data.Count.ShouldBe(0);
         }
+
+        /// <summary>
+        /// 120 seconds.
+        /// </summary>
+        private static TimeSpan DefaultPooledConnectionLifeTime => TimeSpan.FromSeconds(HttpHandlerOptionsCreator.DefaultPooledConnectionLifetimeSeconds);
     }
 
     internal class FakeTracingHandler : DelegatingHandler, ITracingHandler

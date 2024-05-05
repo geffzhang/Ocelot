@@ -1,24 +1,14 @@
 Tests
 =====
 
-The tests should all just run and work apart from the integration tests which need the following 
-environmental variables setting. This is a manual step at the moment.
+The tests should all just run and work as part of the build process. You can of course also run them in Visual Studio.
 
-    ``OCELOT_USERNAME=admin``
+Create SSL Cert for Testing
+---------------------------
 
-    ``OCELOT_HASH=kE/mxd1hO9h9Sl2VhGhwJUd9xZEv4NP6qXoN39nIqM4=``
+You can do this via `OpenSSL <https://www.openssl.org/>`_:
 
-    ``OCELOT_SALT=zzWITpnDximUNKYLiUam/w==``
-
-On windows you can use..
-
-    ``SETX OCELOT_USERNAME admin``
-
-On mac..
-    
-    ``export OCELOT_USERNAME=admin``
-
-I need to work out a nicer way of doing this in the future.
-
-
-
+* Install `openssl package <https://github.com/openssl/openssl>`_ (if you are using Windows, download binaries `here <https://www.openssl.org/source/>`_).
+* Generate private key: ``openssl genrsa 2048 > private.pem``
+* Generate the self-signed certificate: ``openssl req -x509 -days 1000 -new -key private.pem -out public.pem``
+* If needed, create PFX: ``openssl pkcs12 -export -in public.pem -inkey private.pem -out mycert.pfx``

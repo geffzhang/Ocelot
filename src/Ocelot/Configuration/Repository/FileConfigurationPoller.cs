@@ -3,10 +3,6 @@ using Newtonsoft.Json;
 using Ocelot.Configuration.Creator;
 using Ocelot.Configuration.File;
 using Ocelot.Logging;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ocelot.Configuration.Repository
 {
@@ -33,7 +29,7 @@ namespace Ocelot.Configuration.Repository
             _options = options;
             _logger = factory.CreateLogger<FileConfigurationPoller>();
             _repo = repo;
-            _previousAsJson = "";
+            _previousAsJson = string.Empty;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -72,7 +68,7 @@ namespace Ocelot.Configuration.Repository
 
             if (fileConfig.IsError)
             {
-                _logger.LogWarning($"error geting file config, errors are {string.Join(",", fileConfig.Errors.Select(x => x.Message))}");
+                _logger.LogWarning(() =>$"error geting file config, errors are {string.Join(',', fileConfig.Errors.Select(x => x.Message))}");
                 return;
             }
 
@@ -94,10 +90,10 @@ namespace Ocelot.Configuration.Repository
         }
 
         /// <summary>
-        /// We could do object comparison here but performance isnt really a problem. This might be an issue one day!
+        /// We could do object comparison here but performance isnt really a problem. This might be an issue one day!.
         /// </summary>
-        /// <returns>hash of the config</returns>
-        private string ToJson(FileConfiguration config)
+        /// <returns>hash of the config.</returns>
+        private static string ToJson(FileConfiguration config)
         {
             var currentHash = JsonConvert.SerializeObject(config);
             return currentHash;

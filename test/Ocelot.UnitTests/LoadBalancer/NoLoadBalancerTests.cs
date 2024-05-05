@@ -1,19 +1,13 @@
 using Microsoft.AspNetCore.Http;
 using Ocelot.LoadBalancer.LoadBalancers;
-using Ocelot.Middleware;
 using Ocelot.Responses;
 using Ocelot.Values;
-using Shouldly;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.LoadBalancer
 {
-    public class NoLoadBalancerTests
+    public class NoLoadBalancerTests : UnitTest
     {
-        private List<Service> _services;
+        private readonly List<Service> _services;
         private NoLoadBalancer _loadBalancer;
         private Response<ServiceHostAndPort> _result;
 
@@ -30,7 +24,7 @@ namespace Ocelot.UnitTests.LoadBalancer
 
             var services = new List<Service>
             {
-                new Service("product", hostAndPort, string.Empty, string.Empty, new string[0])
+                new("product", hostAndPort, string.Empty, string.Empty, Array.Empty<string>()),
             };
 
             this.Given(x => x.GivenServices(services))
@@ -54,7 +48,7 @@ namespace Ocelot.UnitTests.LoadBalancer
 
             var services = new List<Service>
             {
-                new Service("product", hostAndPort, string.Empty, string.Empty, new string[0])
+                new("product", hostAndPort, string.Empty, string.Empty, Array.Empty<string>()),
             };
 
             this.Given(_ => WhenIGetTheNextHostAndPort())

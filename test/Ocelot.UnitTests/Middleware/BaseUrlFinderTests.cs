@@ -1,18 +1,14 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Ocelot.Middleware;
-using Shouldly;
-using System.Collections.Generic;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Middleware
 {
-    public class BaseUrlFinderTests
+    public class BaseUrlFinderTests : UnitTest
     {
         private BaseUrlFinder _baseUrlFinder;
         private IConfiguration _config;
-        private List<KeyValuePair<string, string>> _data;
+        private readonly List<KeyValuePair<string, string>> _data;
         private string _result;
 
         public BaseUrlFinderTests()
@@ -59,11 +55,14 @@ namespace Ocelot.UnitTests.Middleware
 
         private void WhenIFindTheUrl()
         {
-            var source = new MemoryConfigurationSource();
-            source.InitialData = _data;
+            var source = new MemoryConfigurationSource
+            {
+                InitialData = _data,
+            };
             var provider = new MemoryConfigurationProvider(source);
-            _config = new ConfigurationRoot(new List<IConfigurationProvider>() {
-                provider
+            _config = new ConfigurationRoot(new List<IConfigurationProvider>
+            {
+                provider,
             });
             _baseUrlFinder = new BaseUrlFinder(_config);
             _result = _baseUrlFinder.Find();
